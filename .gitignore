@@ -1,0 +1,14 @@
+# Local overrides / junk
+.env.local
+.env.*.local
+*.log
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+
+# Optional OS / tooling
+*.tmp
+*.swp
