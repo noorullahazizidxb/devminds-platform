@@ -1,5 +1,5 @@
-﻿# Jobs frontend - Next.js multi-stage
-# NEXT_PUBLIC_API_BASE must be origin only (no /api); client paths already start with /api
+# syntax=docker/dockerfile:1
+# Jobs frontend - Next.js multi-stage image
 FROM node:20-bookworm-slim AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
@@ -12,16 +12,12 @@ COPY . .
 
 ARG NEXT_PUBLIC_API_BASE=https://jobs.devminds.net
 ARG NEXT_PUBLIC_API_HOST=https://jobs.devminds.net
-ARG ELASTICSEARCH_NODE=http://elasticsearch:9200
-ARG AUTH_COOKIE_SECRET=devminds_cookie_secret_change_me
-
+ARG NEXT_PUBLIC_DEBUG_HTTP=false
 ENV NEXT_PUBLIC_API_BASE=$NEXT_PUBLIC_API_BASE
 ENV NEXT_PUBLIC_API_HOST=$NEXT_PUBLIC_API_HOST
-ENV ELASTICSEARCH_NODE=$ELASTICSEARCH_NODE
-ENV AUTH_COOKIE_SECRET=$AUTH_COOKIE_SECRET
+ENV NEXT_PUBLIC_DEBUG_HTTP=$NEXT_PUBLIC_DEBUG_HTTP
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
-
 RUN npm run build
 
 FROM node:20-bookworm-slim AS runner

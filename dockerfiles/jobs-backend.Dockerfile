@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-# Jobs API - Node 20
+# Jobs API - Node.js, Prisma, MySQL, Redis, Socket.IO and Elasticsearch
 FROM node:20-bookworm-slim
 
 RUN apt-get update \
@@ -19,46 +19,44 @@ COPY . .
 ENV NODE_ENV=production
 ENV PORT=4000
 
-# Entrypoint: wait for MySQL (Prisma SELECT 1), migrate, optional seed/reindex, start API
 COPY <<'ENTRY' /app/docker-entrypoint.sh
 #!/bin/sh
-set -e
+set -eu
 
 echo "[jobs-backend] Waiting for MySQL..."
 i=0
 until node --input-type=module -e '
 import { PrismaClient } from "@prisma/client";
-const p = new PrismaClient();
+const prisma = new PrismaClient();
 try {
-  await p.$queryRaw`SELECT 1`;
-  console.log("[jobs-backend] MySQL ready");
-  await p.$disconnect();
+  await prisma.$queryRaw`SELECT 1`;
+  await prisma.$disconnect();
   process.exit(0);
-} catch (e) {
-  console.error(e.message || e);
-  await p.$disconnect().catch(() => {});
+} catch (error) {
+  console.error(error.message || error);
+  await prisma.$disconnect().catch(() => {});
   process.exit(1);
 }
 '; do
   i=$((i + 1))
   if [ "$i" -ge 60 ]; then
-    echo "[jobs-backend] MySQL wait timed out"
+    echo "[jobs-backend] MySQL wait timed out" >&2
     exit 1
   fi
   sleep 2
 done
 
-echo "[jobs-backend] Running prisma migrate deploy..."
+echo "[jobs-backend] Applying Prisma migrations..."
 npx prisma migrate deploy
 
-if [ "${RUN_SEEDS}" = "true" ]; then
+if [ "${RUN_SEEDS:-false}" = "true" ]; then
   echo "[jobs-backend] Seeding database..."
-  npx prisma db seed || node prisma/seed.js || true
+  npx prisma db seed
 fi
 
-if [ "${ENABLE_ELASTIC_SEARCH}" = "true" ] && [ "${RUN_ES_REINDEX}" = "true" ]; then
+if [ "${ENABLE_ELASTIC_SEARCH:-true}" = "true" ] && [ "${RUN_ES_REINDEX:-false}" = "true" ]; then
   echo "[jobs-backend] Reindexing Elasticsearch..."
-  node -r dotenv/config ./scripts/reindex-all.js || true
+  node -r dotenv/config ./scripts/reindex-all.js
 fi
 
 echo "[jobs-backend] Starting API..."

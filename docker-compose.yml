@@ -1,4 +1,4 @@
-﻿name: devminds-platform
+name: devminds-platform
 
 services:
   mysql:
@@ -15,7 +15,7 @@ services:
       - mysql-data:/var/lib/mysql
       - ./mysql/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${MYSQL_ROOT_PASSWORD}"]
+      test: ["CMD-SHELL", "MYSQL_PWD=\"$${MYSQL_ROOT_PASSWORD}\" mysqladmin ping --host=127.0.0.1 --user=root --silent"]
       interval: 10s
       timeout: 5s
       retries: 20
@@ -27,11 +27,13 @@ services:
     image: redis:7.4-alpine
     container_name: devminds-redis
     restart: unless-stopped
-    command: ["redis-server", "--appendonly", "yes"]
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:-}"]
     volumes:
       - redis-data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD-SHELL", "REDISCLI_AUTH=\"$${REDIS_PASSWORD}\" redis-cli ping | grep -q PONG"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -86,7 +88,7 @@ services:
       ES_INDEX_USERS: ${ES_INDEX_USERS}
       ES_INDEX_APPLICATIONS: ${ES_INDEX_APPLICATIONS}
       QUEUE_PREFIX: ${QUEUE_PREFIX:-job-portal}
-      RUN_SEEDS: ${RUN_SEEDS:-false}
+      RUN_SEEDS: ${RUN_JOBS_SEEDS:-false}
       RUN_ES_REINDEX: ${RUN_ES_REINDEX:-false}
       GHOSTSCRIPT_ENABLED: ${GHOSTSCRIPT_ENABLED:-false}
     volumes:
@@ -145,8 +147,6 @@ services:
       args:
         NEXT_PUBLIC_API_BASE: ${NEXT_PUBLIC_JOBS_API_BASE:-https://jobs.devminds.net}
         NEXT_PUBLIC_API_HOST: ${NEXT_PUBLIC_JOBS_API_BASE:-https://jobs.devminds.net}
-        ELASTICSEARCH_NODE: ${ELASTICSEARCH_NODE:-http://elasticsearch:9200}
-        AUTH_COOKIE_SECRET: ${AUTH_COOKIE_SECRET}
     container_name: devminds-jobs-frontend
     restart: unless-stopped
     env_file:
@@ -160,7 +160,14 @@ services:
       ELASTICSEARCH_NODE: ${ELASTICSEARCH_NODE}
       AUTH_COOKIE_SECRET: ${AUTH_COOKIE_SECRET}
     depends_on:
-      - jobs-backend
+      jobs-backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:3000/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 20s
+      timeout: 10s
+      retries: 15
+      start_period: 60s
     networks:
       - devminds-net
 
@@ -185,7 +192,8 @@ services:
       ELASTICSEARCH_INDEX: ${ELASTICSEARCH_INDEX}
       ELASTICSEARCH_USERS_INDEX: ${ELASTICSEARCH_USERS_INDEX}
       ELASTICSEARCH_BLOGS_INDEX: ${ELASTICSEARCH_BLOGS_INDEX}
-      RUN_SEEDS: ${RUN_SEEDS:-true}
+      RUN_SEEDS: ${RUN_MARKETPLACE_ADMIN_SEED:-true}
+      RUN_DEMO_SEEDS: ${RUN_MARKETPLACE_DEMO_SEEDS:-false}
       RUN_ES_REINDEX: ${RUN_ES_REINDEX:-false}
       ADMIN_EMAIL: ${ADMIN_EMAIL}
       ADMIN_PHONE: ${ADMIN_PHONE}
@@ -226,10 +234,11 @@ services:
       context: ../MarketPlace_Back_end__Front_End/marketplace-Front-end
       dockerfile: ../../devminds-platform/dockerfiles/marketplace-frontend.Dockerfile
       args:
-        NEXT_PUBLIC_API_BASE: ${NEXT_PUBLIC_MARKETPLACE_API_BASE:-https://marketplace.devminds.net/api}
-        NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_MARKETPLACE_WS_URL:-https://marketplace.devminds.net}
-        NEXT_PUBLIC_SOCKET_URL: ${NEXT_PUBLIC_MARKETPLACE_WS_URL:-https://marketplace.devminds.net}
-        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_MARKETPLACE_SITE_URL:-https://marketplace.devminds.net}
+        NEXT_PUBLIC_API_BASE: ${NEXT_PUBLIC_MARKETPLACE_API_BASE:-https://marketplace.devminds.com/api}
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_MARKETPLACE_API_BASE:-https://marketplace.devminds.com/api}
+        NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_MARKETPLACE_WS_URL:-https://marketplace.devminds.com}
+        NEXT_PUBLIC_SOCKET_URL: ${NEXT_PUBLIC_MARKETPLACE_WS_URL:-https://marketplace.devminds.com}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_MARKETPLACE_SITE_URL:-https://marketplace.devminds.com}
         API_BASE: http://marketplace-backend:4000/api
         NEXT_PUBLIC_ENABLE_ELASTIC_SEARCH: ${NEXT_PUBLIC_ENABLE_ELASTIC_SEARCH:-true}
     container_name: devminds-marketplace-frontend
@@ -240,14 +249,22 @@ services:
       NODE_ENV: production
       PORT: 3000
       HOSTNAME: 0.0.0.0
-      NEXT_PUBLIC_API_BASE: ${NEXT_PUBLIC_MARKETPLACE_API_BASE:-https://marketplace.devminds.net/api}
-      NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_MARKETPLACE_WS_URL:-https://marketplace.devminds.net}
-      NEXT_PUBLIC_SOCKET_URL: ${NEXT_PUBLIC_MARKETPLACE_WS_URL:-https://marketplace.devminds.net}
-      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_MARKETPLACE_SITE_URL:-https://marketplace.devminds.net}
+      NEXT_PUBLIC_API_BASE: ${NEXT_PUBLIC_MARKETPLACE_API_BASE:-https://marketplace.devminds.com/api}
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_MARKETPLACE_API_BASE:-https://marketplace.devminds.com/api}
+      NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_MARKETPLACE_WS_URL:-https://marketplace.devminds.com}
+      NEXT_PUBLIC_SOCKET_URL: ${NEXT_PUBLIC_MARKETPLACE_WS_URL:-https://marketplace.devminds.com}
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_MARKETPLACE_SITE_URL:-https://marketplace.devminds.com}
       API_BASE: http://marketplace-backend:4000/api
       NEXT_PUBLIC_ENABLE_ELASTIC_SEARCH: ${NEXT_PUBLIC_ENABLE_ELASTIC_SEARCH:-true}
     depends_on:
-      - marketplace-backend
+      marketplace-backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:3000/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 20s
+      timeout: 10s
+      retries: 15
+      start_period: 90s
     networks:
       - devminds-net
 
@@ -264,10 +281,19 @@ services:
       - ./nginx/www/landing:/var/www/landing:ro
       - ./nginx/certs:/etc/nginx/certs:ro
     depends_on:
-      - jobs-frontend
-      - jobs-backend
-      - marketplace-frontend
-      - marketplace-backend
+      jobs-frontend:
+        condition: service_healthy
+      jobs-backend:
+        condition: service_healthy
+      marketplace-frontend:
+        condition: service_healthy
+      marketplace-backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider --header='Host: devminds.net' http://127.0.0.1/health"]
+      interval: 20s
+      timeout: 5s
+      retries: 10
     networks:
       - devminds-net
 

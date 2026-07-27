@@ -30,6 +30,13 @@ Build contexts (relative to this folder):
 - `../MarketPlace_Back_end__Front_End/MarketPlace-Back-End-Node-Parisma`
 - `../MarketPlace_Back_end__Front_End/marketplace-Front-end`
 
+## Docs
+
+| Guide | Path |
+|-------|------|
+| Localhost runbook | [docs/LOCALHOST.md](docs/LOCALHOST.md) |
+| Ubuntu VPS + Let’s Encrypt | [docs/DEPLOY-VPS.md](docs/DEPLOY-VPS.md) |
+
 ## Quick start
 
 1. Ensure Docker Desktop (or Docker Engine + Compose v2) is running.
@@ -47,13 +54,15 @@ docker compose up -d --build
 - https://jobs.devminds.net
 - https://marketplace.devminds.net
 
-Self-signed certificates live in `nginx/certs/`. Browsers will warn until you install a real cert (e.g. Let’s Encrypt).
+Self-signed certificates live in `nginx/certs/`. Browsers will warn until you install a real cert (e.g. Let’s Encrypt). Full VPS steps: [docs/DEPLOY-VPS.md](docs/DEPLOY-VPS.md).
 
 ### Local hosts (optional)
 
 ```text
-127.0.0.1  devminds.net www.devminds.net jobs.devminds.net marketplace.devminds.net
+127.0.0.1  devminds.net www.devminds.net jobs.devminds.net marketplace.devminds.net marketplace.devminds.com
 ```
+
+See [docs/LOCALHOST.md](docs/LOCALHOST.md) for health checks and ops commands.
 
 ## Rebuild from scratch
 

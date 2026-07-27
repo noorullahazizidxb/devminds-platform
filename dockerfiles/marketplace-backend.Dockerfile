@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-# Marketplace API - Node 20
+# Marketplace API - Node.js, Prisma, MySQL, Redis, Socket.IO and Elasticsearch
 FROM node:20-bookworm-slim
 
 RUN apt-get update \
@@ -8,63 +8,62 @@ RUN apt-get update \
 
 WORKDIR /app
 
+# package.json runs `prisma generate` in postinstall, so the schema must exist
+# before npm ci. This order is required for a clean Docker build.
 COPY package.json package-lock.json ./
+COPY prisma ./prisma
 RUN npm ci
 
-COPY prisma ./prisma
-RUN npx prisma generate
-
 COPY . .
+RUN npx prisma generate
 
 ENV NODE_ENV=production
 ENV PORT=4000
-ENV RUN_SEEDS=true
 
 COPY <<'ENTRY' /app/docker-entrypoint.sh
 #!/bin/sh
-set -e
+set -eu
 
 echo "[marketplace-backend] Waiting for MySQL..."
 i=0
 until node --input-type=module -e '
 import { PrismaClient } from "@prisma/client";
-const p = new PrismaClient();
+const prisma = new PrismaClient();
 try {
-  await p.$queryRaw`SELECT 1`;
-  console.log("[marketplace-backend] MySQL ready");
-  await p.$disconnect();
+  await prisma.$queryRaw`SELECT 1`;
+  await prisma.$disconnect();
   process.exit(0);
-} catch (e) {
-  console.error(e.message || e);
-  await p.$disconnect().catch(() => {});
+} catch (error) {
+  console.error(error.message || error);
+  await prisma.$disconnect().catch(() => {});
   process.exit(1);
 }
 '; do
   i=$((i + 1))
   if [ "$i" -ge 60 ]; then
-    echo "[marketplace-backend] MySQL wait timed out"
+    echo "[marketplace-backend] MySQL wait timed out" >&2
     exit 1
   fi
   sleep 2
 done
 
-echo "[marketplace-backend] Running prisma migrate deploy..."
+echo "[marketplace-backend] Applying Prisma migrations..."
 npx prisma migrate deploy
 
 if [ "${RUN_SEEDS:-true}" = "true" ]; then
-  echo "[marketplace-backend] Seeding admin..."
-  node scripts/seedAdmin.js || true
-  echo "[marketplace-backend] Seeding all..."
-  node scripts/seedAll.js || true
+  echo "[marketplace-backend] Ensuring the admin account exists..."
+  node scripts/seedAdmin.js
 fi
 
-if [ "${ENABLE_ELASTIC_SEARCH}" = "true" ]; then
-  echo "[marketplace-backend] Initializing Elasticsearch indexes..."
-  node scripts/initUsersIndex.js || true
-  if [ "${RUN_ES_REINDEX}" = "true" ]; then
-    node scripts/reindex-search.js || true
-    node scripts/reindex-blogs.js || true
-  fi
+if [ "${RUN_DEMO_SEEDS:-false}" = "true" ]; then
+  echo "[marketplace-backend] Loading demo data..."
+  node scripts/seedAll.js
+fi
+
+if [ "${ENABLE_ELASTIC_SEARCH:-true}" = "true" ] && [ "${RUN_ES_REINDEX:-false}" = "true" ]; then
+  echo "[marketplace-backend] Reindexing Elasticsearch..."
+  node scripts/reindex-search.js
+  node scripts/reindex-blogs.js
 fi
 
 echo "[marketplace-backend] Starting API..."

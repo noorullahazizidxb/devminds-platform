@@ -1,35 +1,76 @@
-﻿<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="DevMinds — choose Jobs or Marketplace" />
-  <title>DevMinds</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/styles.css" />
+  <meta name="theme-color" content="#071914" />
+  <meta name="description" content="DevMinds connects ambitious people with meaningful work and trusted marketplace opportunities." />
+  <title>DevMinds | Work. Trade. Move Forward.</title>
   <link rel="icon" href="/logo.png" type="image/png" />
+  <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
-  <div class="stage" aria-hidden="true">
-    <div class="mesh"></div>
-    <div class="beam beam-a"></div>
-    <div class="beam beam-b"></div>
-    <div class="grid"></div>
-    <div class="noise"></div>
+  <div class="ambient" aria-hidden="true">
+    <span class="orb orb-one"></span>
+    <span class="orb orb-two"></span>
+    <span class="grid"></span>
   </div>
 
-  <main class="hero">
-    <div class="brand fade-up">
-      <img class="logo glow-pulse" src="/logo.png" alt="DevMinds" width="104" height="104" />
-      <h1 class="wordmark">DevMinds</h1>
-    </div>
-    <p class="tagline fade-up delay-1">Where careers meet commerce.</p>
-    <nav class="cta-group fade-up delay-2" aria-label="Destinations">
-      <a class="cta" href="https://jobs.devminds.net">Searching for Jobs</a>
-      <a class="cta cta-alt" href="https://marketplace.devminds.net">Rent or Sale</a>
-    </nav>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="DevMinds home">
+      <img src="/logo.png" width="791" height="369" alt="DevMinds" />
+    </a>
+    <span class="header-note"><i></i> One ecosystem. Real opportunity.</span>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow"><span>Built for progress</span></p>
+        <h1 id="hero-title">Your next move<br /><em>starts here.</em></h1>
+        <p class="intro">Discover serious career opportunities or find the right place, product, or buyer—all through one trusted DevMinds ecosystem.</p>
+      </div>
+
+      <nav class="destinations" aria-label="Choose a DevMinds service">
+        <a class="destination jobs" href="https://jobs.devminds.net">
+          <span class="card-topline"><span class="card-index">01</span><span class="status">Explore careers</span></span>
+          <span class="icon-shell" aria-hidden="true">
+            <svg viewBox="0 0 48 48" fill="none">
+              <path d="M17 14v-2.5A4.5 4.5 0 0 1 21.5 7h5a4.5 4.5 0 0 1 4.5 4.5V14" />
+              <rect x="7" y="14" width="34" height="27" rx="6" />
+              <path d="M7 25c10.8 5.3 23.2 5.3 34 0M20 27h8" />
+            </svg>
+          </span>
+          <span class="card-copy">
+            <strong>Searching for Jobs</strong>
+            <small>Find roles, companies, and opportunities built around your ambition.</small>
+          </span>
+          <span class="card-action">Enter Jobs <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11M11 5l5 5-5 5" /></svg></span>
+        </a>
+
+        <a class="destination market" href="https://marketplace.devminds.com">
+          <span class="card-topline"><span class="card-index">02</span><span class="status">Explore marketplace</span></span>
+          <span class="icon-shell" aria-hidden="true">
+            <svg viewBox="0 0 48 48" fill="none">
+              <path d="M8 22 24 8l16 14" />
+              <path d="M12 19v22h24V19M20 41V29h8v12" />
+              <path d="M34 10h6v10" />
+            </svg>
+          </span>
+          <span class="card-copy">
+            <strong>Rent or Sale</strong>
+            <small>Discover trusted listings and make your next transaction with confidence.</small>
+          </span>
+          <span class="card-action">Enter Marketplace <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11M11 5l5 5-5 5" /></svg></span>
+        </a>
+      </nav>
+    </section>
   </main>
+
+  <footer>
+    <span>DevMinds</span>
+    <span class="footer-rule"></span>
+    <span>Technology for meaningful momentum.</span>
+  </footer>
 </body>
 </html>
