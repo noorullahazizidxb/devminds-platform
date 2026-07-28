@@ -39,6 +39,13 @@ if ($LASTEXITCODE -ne 0) {
   throw "Docker Compose deployment failed."
 }
 
+if ($Env -eq "local") {
+  # Nginx stays defined in the base compose file but is profile-gated for local.
+  # Stop any leftover edge proxy from a previous production run.
+  docker compose -f docker-compose.yml stop nginx 2>$null | Out-Null
+  docker compose -f docker-compose.yml rm -f nginx 2>$null | Out-Null
+}
+
 docker compose @composeArgs ps
 
 if ($Env -eq "local") {

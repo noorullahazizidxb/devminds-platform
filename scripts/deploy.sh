@@ -36,6 +36,13 @@ fi
 
 "${COMPOSE[@]}" config --quiet
 "${COMPOSE[@]}" up -d --build --remove-orphans
+
+if [ "$ENV_MODE" = "local" ]; then
+  # Stop leftover Nginx from a previous production run (profile-gated locally).
+  docker compose -f docker-compose.yml stop nginx >/dev/null 2>&1 || true
+  docker compose -f docker-compose.yml rm -f nginx >/dev/null 2>&1 || true
+fi
+
 "${COMPOSE[@]}" ps
 
 if [ "$ENV_MODE" = "local" ]; then
