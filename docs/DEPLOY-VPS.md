@@ -137,7 +137,11 @@ sudo crontab -e
 
 ## 7. Hardening
 
-- Disable demo seeds after first successful boot
+- After first successful boot, keep seeds off for subsequent restarts:
+  - `RUN_JOBS_SEEDS=false`
+  - `RUN_MARKETPLACE_ADMIN_SEED=true` (idempotent admin ensure — safe) or `false` once admin exists
+  - `RUN_MARKETPLACE_DEMO_SEEDS=false`
+  - `RUN_ES_REINDEX=false`
 - Optional: `fail2ban`, unattended-upgrades
 - Backup MySQL regularly:
 
@@ -158,4 +162,13 @@ git pull
 ./scripts/deploy.sh
 ```
 
-Prisma migrations run on backend container start (`migrate deploy`). Frontend images rebuild when sources or `NEXT_PUBLIC_*` change.
+### Prisma on every backend start
+
+| Step | Marketplace | Jobs API |
+|------|-------------|----------|
+| `prisma generate` | Image build (`postinstall` + explicit `npx prisma generate`) | Image build (`npx prisma generate`) |
+| `prisma migrate deploy` | Entrypoint (always) | Entrypoint (always) |
+| Seeds | `seedAdmin.js` if `RUN_MARKETPLACE_ADMIN_SEED=true`; `seedAll.js` if `RUN_MARKETPLACE_DEMO_SEEDS=true` | `prisma db seed` if `RUN_JOBS_SEEDS=true` |
+| ES reindex | Optional if `RUN_ES_REINDEX=true` | Optional if `RUN_ES_REINDEX=true` |
+
+Jobs worker reuses the jobs image but skips migrate/seed (custom entrypoint). Frontend images rebuild when sources or `NEXT_PUBLIC_*` change.

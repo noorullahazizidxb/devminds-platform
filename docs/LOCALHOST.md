@@ -40,6 +40,61 @@ Key local values (defaults in `.env.example`):
 | MySQL | `MYSQL_*`, `DATABASE_URL_JOBS`, `DATABASE_URL_MARKETPLACE` |
 | Redis | `REDIS_PASSWORD`, `REDIS_URL` |
 | Public FE URLs | `NEXT_PUBLIC_JOBS_API_BASE`, `NEXT_PUBLIC_MARKETPLACE_*` (build-time) |
+| Prisma seeds | `RUN_JOBS_SEEDS`, `RUN_MARKETPLACE_ADMIN_SEED`, `RUN_MARKETPLACE_DEMO_SEEDS`, `RUN_ES_REINDEX` |
+
+## Prisma: generate, migrate, seeds (mandatory)
+
+Backends own the database lifecycle. You do **not** run Prisma by hand for Compose boots — Dockerfiles and entrypoints do it.
+
+MySQL first-boot (`mysql/init/01-create-databases.sql`) creates `marketplace` and `job_portal`. Then each API container:
+
+1. waits for MySQL
+2. runs `npx prisma migrate deploy`
+3. optionally seeds
+4. starts the Node process
+
+| Project | Image build | Container start | Seed command | Compose env → container |
+|---------|-------------|-----------------|--------------|-------------------------|
+| **Marketplace** (`MarketPlace-Back-End-Node-Parisma`) | Copy `prisma/` before `npm ci` (postinstall `prisma generate`), then `npx prisma generate` again | `npx prisma migrate deploy` | Admin: `node scripts/seedAdmin.js` (default **on**). Demo: `node scripts/seedAll.js` (default **off**) | `RUN_MARKETPLACE_ADMIN_SEED` → `RUN_SEEDS`; `RUN_MARKETPLACE_DEMO_SEEDS` → `RUN_DEMO_SEEDS` |
+| **Jobs API** (`job-service-back-end`) | `COPY prisma` then `npx prisma generate` | `npx prisma migrate deploy` | `npx prisma db seed` → `prisma/seed.js` (default **off**) | `RUN_JOBS_SEEDS` → `RUN_SEEDS` |
+| **Jobs worker** | Same image (client generated at build) | **No** migrate/seed — entrypoint overridden to `imageProcessor.js` | — | — |
+
+Recommended first localhost boot:
+
+```env
+RUN_JOBS_SEEDS=false
+RUN_MARKETPLACE_ADMIN_SEED=true
+RUN_MARKETPLACE_DEMO_SEEDS=false
+RUN_ES_REINDEX=false
+ADMIN_EMAIL=...
+ADMIN_PASSWORD=...
+```
+
+Turn on jobs demo data or marketplace demo / ES reindex only when you explicitly want a full sample dataset:
+
+```env
+RUN_JOBS_SEEDS=true
+RUN_MARKETPLACE_DEMO_SEEDS=true
+RUN_ES_REINDEX=true
+```
+
+Then recreate the backend containers so entrypoints re-run:
+
+```powershell
+docker compose up -d --force-recreate jobs-backend marketplace-backend
+```
+
+Local (non-Docker) one-offs from each backend repo:
+
+```bash
+# Marketplace
+npm run generate && npx prisma migrate deploy && npm run seed:admin   # optional: npm run seed:all
+
+# Jobs
+npm run generate && npx prisma migrate deploy && npm run seed
+```
+
+Do **not** use `prisma migrate dev` inside production/Compose images — entrypoints use `migrate deploy` only.
 
 ## Hosts file
 
