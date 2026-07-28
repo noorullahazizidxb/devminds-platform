@@ -44,7 +44,9 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/next.config.js ./next.config.js
 COPY --from=builder /app/next.config.mjs ./next.config.mjs
 COPY --from=builder /app/i18n ./i18n
-COPY --from=builder /app/theme-data ./theme-data
+# Theme settings persist in .data/ui-context.json at runtime (created on first boot).
+# theme-data/ was removed when HSL file themes were collapsed into ui-context.
+RUN mkdir -p .data
 
 EXPOSE 3000
 CMD ["npm", "run", "start"]

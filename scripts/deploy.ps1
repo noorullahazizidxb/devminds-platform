@@ -42,8 +42,16 @@ if ($LASTEXITCODE -ne 0) {
 if ($Env -eq "local") {
   # Nginx stays defined in the base compose file but is profile-gated for local.
   # Stop any leftover edge proxy from a previous production run.
-  docker compose -f docker-compose.yml stop nginx 2>$null | Out-Null
-  docker compose -f docker-compose.yml rm -f nginx 2>$null | Out-Null
+  # Docker writes "No stopped containers" to stderr; with $ErrorActionPreference=Stop
+  # that becomes a terminating NativeCommandError — silence it intentionally.
+  $prevEap = $ErrorActionPreference
+  $ErrorActionPreference = "SilentlyContinue"
+  try {
+    docker compose -f docker-compose.yml stop nginx *>$null
+    docker compose -f docker-compose.yml rm -f nginx *>$null
+  } finally {
+    $ErrorActionPreference = $prevEap
+  }
 }
 
 docker compose @composeArgs ps
