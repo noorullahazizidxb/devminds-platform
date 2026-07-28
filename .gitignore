@@ -1,6 +1,7 @@
+# Active Compose env (copied from .env.local or .env.production)
+.env
+
 # Local overrides / junk
-.env.local
-.env.*.local
 *.log
 .DS_Store
 Thumbs.db

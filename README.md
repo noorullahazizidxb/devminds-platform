@@ -8,7 +8,7 @@ Docker orchestration for the DevMinds landing site, Jobs portal, and Marketplace
 |------|---------|
 | `devminds.net` / `www.devminds.net` | Static landing (`nginx/www/landing`) |
 | `jobs.devminds.net` | Jobs Next.js frontend + API (`/api`, `/socket.io`, `/uploads`, `/health`) |
-| `marketplace.devminds.net` | Marketplace Next.js frontend + API (`/api`, `/socket.io`, `/uploads`) |
+| `marketplace.devminds.net` / `.com` | Marketplace Next.js frontend + API (`/api`, `/socket.io`, `/uploads`, `/health`) |
 
 Point DNS (or local hosts) at the machine running this stack. Ports **80** and **443** are published by Nginx.
 
@@ -16,11 +16,15 @@ Point DNS (or local hosts) at the machine running this stack. Ports **80** and *
 
 ```
 devminds-platform/
+├── .env.local            # Localhost IP:port template (tracked)
+├── .env.production       # VPS domains template (tracked; ChangeMe* secrets)
+├── .env                  # Active runtime file (gitignored; copied by deploy)
 ├── docker-compose.yml
+├── docker-compose.local.yml  # Publishes :3001/:3002/:4001/:4002; skips Nginx
 ├── dockerfiles/          # App Dockerfiles (build contexts point at sibling repos)
 ├── mysql/init/           # Creates marketplace + job_portal databases
-├── nginx/                # Edge proxy + landing + TLS certs
-└── scripts/              # clean-docker / rebuild-fresh
+├── nginx/                # Edge proxy + landing + TLS certs + ACME webroot
+└── scripts/              # deploy / rebuild-fresh / clean-docker
 ```
 
 Build contexts (relative to this folder):
@@ -37,52 +41,52 @@ Build contexts (relative to this folder):
 | Localhost runbook | [docs/LOCALHOST.md](docs/LOCALHOST.md) |
 | Ubuntu VPS + Let’s Encrypt | [docs/DEPLOY-VPS.md](docs/DEPLOY-VPS.md) |
 
-## Quick start
+## Quick start (localhost — IP + ports)
 
 1. Ensure Docker Desktop (or Docker Engine + Compose v2) is running.
-2. Copy `.env.example` → `.env` if needed (a working `.env` is already present for local defaults).
-3. Confirm sibling app repos exist at the paths above.
-4. From this directory:
+2. Confirm sibling app repos exist at the paths above.
+3. From this directory:
 
 ```powershell
-docker compose up -d --build
-```
-
-5. Open:
-
-- https://devminds.net (or http://localhost with `Host` header / hosts file)
-- https://jobs.devminds.net
-- https://marketplace.devminds.net
-
-Self-signed certificates live in `nginx/certs/`. Browsers will warn until you install a real cert (e.g. Let’s Encrypt). Full VPS steps: [docs/DEPLOY-VPS.md](docs/DEPLOY-VPS.md).
-
-### Local hosts (optional)
-
-```text
-127.0.0.1  devminds.net www.devminds.net jobs.devminds.net marketplace.devminds.net marketplace.devminds.com
-```
-
-See [docs/LOCALHOST.md](docs/LOCALHOST.md) for health checks and ops commands.
-
-## Rebuild from scratch
-
-Removes containers **and volumes**, rebuilds with no cache, then starts:
-
-```powershell
-.\scripts\rebuild-fresh.ps1
+.\scripts\deploy.ps1
+# copies .env.local → .env, uses docker-compose.local.yml (no Nginx)
 ```
 
 ```bash
 chmod +x scripts/*.sh
-./scripts/rebuild-fresh.sh
+./scripts/deploy.sh
 ```
 
-Equivalent:
+4. Open:
+
+| App | URL |
+|-----|-----|
+| Jobs | http://127.0.0.1:3001 |
+| Marketplace | http://127.0.0.1:3002 |
+| Jobs API | http://127.0.0.1:4001/health |
+| Marketplace API | http://127.0.0.1:4002/api/health |
+
+Production VPS (domains + Nginx):
 
 ```bash
-docker compose down -v
-docker compose build --no-cache
-docker compose up -d
+nano .env.production    # replace ChangeMe*
+./scripts/deploy.sh production
+```
+
+Full VPS steps: [docs/DEPLOY-VPS.md](docs/DEPLOY-VPS.md).
+
+## Rebuild from scratch
+
+Deletes MySQL data only (keeps Redis / ES / uploads), rebuilds without cache, then starts:
+
+```powershell
+.\scripts\rebuild-fresh.ps1
+.\scripts\rebuild-fresh.ps1 -Env production
+```
+
+```bash
+./scripts/rebuild-fresh.sh
+./scripts/rebuild-fresh.sh production
 ```
 
 ## Clean Docker
@@ -103,13 +107,20 @@ docker compose up -d
 
 ## Health endpoints
 
+**Local (IP + ports):**
+
+| URL | Expected |
+|-----|----------|
+| `http://127.0.0.1:4001/health` | Jobs API |
+| `http://127.0.0.1:4002/api/health` | Marketplace API |
+
+**Production (Nginx domains):**
+
 | URL | Expected |
 |-----|----------|
 | `https://devminds.net/health` | `ok` (landing) |
 | `https://jobs.devminds.net/health` | Proxied to jobs-backend `:4000/health` |
-| `https://marketplace.devminds.net/health` | Proxied to marketplace-backend `:4000/health` |
-
-Also useful:
+| `https://marketplace.devminds.net/health` | Proxied to marketplace-backend `:4000/api/health` |
 
 ```bash
 docker compose ps
@@ -121,32 +132,34 @@ docker compose logs -f jobs-backend marketplace-backend nginx
 | Service | Image / build | Notes |
 |---------|---------------|-------|
 | `mysql` | `mysql:8.4` | Init script creates DBs; healthcheck enabled |
-| `redis` | `redis:7.4-alpine` | AOF enabled |
+| `redis` | `redis:7.4-alpine` | AOF + requirepass |
 | `elasticsearch` | `8.15.3` | Single-node, security off, 512m heap |
 | `jobs-backend` | Dockerfile | Migrate + optional seed/reindex |
 | `jobs-worker` | Same image | `node ./src/queue/imageProcessor.js` |
-| `jobs-frontend` | Next.js | Bakes `NEXT_PUBLIC_API_BASE=https://jobs.devminds.net` |
-| `marketplace-backend` | Dockerfile | Seeds when `RUN_SEEDS=true` (default) |
+| `jobs-frontend` | Next.js | Bakes `NEXT_PUBLIC_API_BASE` |
+| `marketplace-backend` | Dockerfile | Admin/demo seeds via flags |
 | `marketplace-frontend` | Next.js | Bakes marketplace public + internal `API_BASE` |
-| `nginx` | `1.27-alpine` | HTTP + HTTPS for all domains |
+| `nginx` | `1.27-alpine` | HTTP + HTTPS + ACME webroot |
 
 ## Environment notes
 
-- `MYSQL_ROOT_PASSWORD` / app passwords: special characters in `DATABASE_URL_*` must be URL-encoded (`@` → `%40`).
+- Templates: `.env.local` (IP:ports) and `.env.production` (domains). Active file is always `.env`.
+- Local deploy uses `docker-compose.yml` + `docker-compose.local.yml`. Production uses `docker-compose.yml` only (Nginx).
+- `MYSQL_USER` must stay `devminds`. Special characters in `DATABASE_URL_*` must be URL-encoded (`@` → `%40`).
+- Keep `REDIS_PASSWORD` and `REDIS_URL` in sync.
 - Frontend `NEXT_PUBLIC_*` values are **build args** — rebuild frontends after changing public URLs.
-- Set `RUN_SEEDS=true` / `RUN_ES_REINDEX=true` as needed for first boot.
+- Seed/reindex flags: `RUN_JOBS_SEEDS`, `RUN_MARKETPLACE_ADMIN_SEED`, `RUN_MARKETPLACE_DEMO_SEEDS`, `RUN_ES_REINDEX`.
 
 ## TLS
 
 Development certs:
 
 ```powershell
-# regenerated into nginx/certs/fullchain.pem + privkey.pem
 openssl req -x509 -nodes -newkey rsa:2048 -days 825 `
   -keyout nginx/certs/privkey.pem `
   -out nginx/certs/fullchain.pem `
   -subj "/CN=devminds.net" `
-  -addext "subjectAltName=DNS:devminds.net,DNS:www.devminds.net,DNS:jobs.devminds.net,DNS:marketplace.devminds.net"
+  -addext "subjectAltName=DNS:devminds.net,DNS:www.devminds.net,DNS:jobs.devminds.net,DNS:marketplace.devminds.net,DNS:marketplace.devminds.com"
 ```
 
-Replace with Let’s Encrypt (or other) certs for production; keep the same filenames or update `nginx/conf.d/*.conf`.
+Replace with Let’s Encrypt for production; keep the same filenames. See [docs/DEPLOY-VPS.md](docs/DEPLOY-VPS.md).

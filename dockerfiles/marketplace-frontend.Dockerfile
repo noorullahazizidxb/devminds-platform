@@ -44,6 +44,7 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/next.config.js ./next.config.js
 COPY --from=builder /app/next.config.mjs ./next.config.mjs
 COPY --from=builder /app/i18n ./i18n
+COPY --from=builder /app/theme-data ./theme-data
 
 EXPOSE 3000
 CMD ["npm", "run", "start"]

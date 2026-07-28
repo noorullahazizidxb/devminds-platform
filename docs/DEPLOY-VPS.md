@@ -2,22 +2,54 @@
 
 Target: Ubuntu 22.04/24.04, Docker Compose, production domains (`devminds.net`, `jobs.devminds.net`, `marketplace.devminds.net` / `.com`), Let’s Encrypt TLS into `nginx/certs/`.
 
-## 1. Server requirements
+Local development uses IP:ports instead — see [LOCALHOST.md](LOCALHOST.md). Production deploy uses `.env.production` and **only** `docker-compose.yml` (Nginx on 80/443; app ports stay internal).
+
+## Cheat sheet
+
+```bash
+cd ~/projects/devminds-platform
+nano .env.production          # replace every ChangeMe*
+chmod +x scripts/*.sh
+./scripts/deploy.sh production
+docker compose ps
+curl -k https://jobs.devminds.net/health
+# then issue Let’s Encrypt (Step 6) and turn seed flags down (Step 7)
+```
+
+---
+
+## Step 1 — Server requirements
 
 - **RAM:** 4–8 GB minimum (Elasticsearch uses ~512m heap)
 - **Disk:** ≥20 GB free for images + MySQL/ES volumes
 - **Ports:** 22 (SSH), 80, 443 open
 - **DNS:** A/AAAA for all domains pointing at the VPS **before** issuing certs
 
-## 2. Install Docker + firewall
+---
+
+## Step 2 — Install Docker + firewall
 
 ```bash
 sudo apt update
 sudo apt install -y ca-certificates curl git ufw
 
-# Official Docker Engine + Compose plugin (Ubuntu):
-# https://docs.docker.com/engine/install/ubuntu/
-# After install, ensure: docker compose version
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+  -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] \
+https://download.docker.com/linux/ubuntu \
+$(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+  | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io \
+  docker-buildx-plugin docker-compose-plugin
+
+sudo usermod -aG docker "$USER"
+# log out and back in, then:
+docker compose version
 
 sudo ufw allow OpenSSH
 sudo ufw allow 80/tcp
@@ -25,11 +57,11 @@ sudo ufw allow 443/tcp
 sudo ufw enable
 ```
 
-Add your deploy user to the `docker` group if needed: `sudo usermod -aG docker $USER` (re-login).
+---
 
-## 3. Clone layout (sibling contexts)
+## Step 3 — Clone sibling layout
 
-Compose build contexts are **relative** to `devminds-platform`. Use this layout:
+Compose build contexts are **relative** to `devminds-platform`:
 
 ```text
 ~/projects/
@@ -45,68 +77,81 @@ Compose build contexts are **relative** to `devminds-platform`. Use this layout:
 ```bash
 mkdir -p ~/projects
 cd ~/projects
-# Clone each private/public repo into the paths above
 git clone <devminds-platform-url> devminds-platform
-# ... clone sibling apps into the matching folders
+# Clone each sibling app into the matching folders above
 ```
 
-## 4. Configure `.env`
+---
+
+## Step 4 — Configure `.env.production`
 
 ```bash
 cd ~/projects/devminds-platform
-cp .env.example .env
-nano .env   # or vim
+nano .env.production
 ```
 
 Replace every `ChangeMe*` value:
 
 | Group | Action |
 |-------|--------|
-| `MYSQL_ROOT_PASSWORD`, `MYSQL_PASSWORD` | Strong secrets; URL-encode special chars in `DATABASE_URL_*` |
+| `MYSQL_ROOT_PASSWORD`, `MYSQL_PASSWORD` | Strong secrets; URL-encode special chars in `DATABASE_URL_*` (`@` → `%40`) |
+| `MYSQL_USER` | Keep `devminds` (init SQL is hardcoded) |
 | `REDIS_PASSWORD` / `REDIS_URL` | Keep consistent |
 | `TOKEN_SECRET`, `JWT_SECRET`, `SESSION_SECRET`, `AUTH_COOKIE_SECRET` | Unique random strings |
-| Domains | Production hostnames |
-| `NEXT_PUBLIC_JOBS_API_BASE` | `https://jobs.devminds.net` |
-| `NEXT_PUBLIC_MARKETPLACE_*` | Match `marketplace.devminds.net` or `.com` as served |
-| Seeds | First boot: `RUN_MARKETPLACE_ADMIN_SEED=true`; set `false` after |
-| `ADMIN_PASSWORD` | Change immediately after first login |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | First admin; change after login |
+| Seeds | First boot: `RUN_MARKETPLACE_ADMIN_SEED=true`; jobs/demo/reindex `false` |
+| `NEXT_PUBLIC_*` | Production HTTPS URLs (rebuild frontends if you change them later) |
 
-Do **not** commit `.env`.
+Notes:
 
-## 5. First bring-up (self-signed smoke)
+- Domain vars are documentation only — Nginx hostnames are fixed in `nginx/conf.d/`.
+- Leave `ELASTICSEARCH_USERNAME` empty (security off).
+- Active runtime file is `.env` (gitignored). Deploy copies `.env.production` → `.env`.
+
+Do **not** commit real production secrets.
+
+---
+
+## Step 5 — First bring-up (self-signed smoke)
 
 ```bash
 cd ~/projects/devminds-platform
 chmod +x scripts/*.sh
-./scripts/deploy.sh
+./scripts/deploy.sh production
 docker compose ps
+curl -k https://devminds.net/health
 curl -k https://jobs.devminds.net/health
 curl -k https://marketplace.devminds.net/health
-curl -k https://devminds.net/health
 ```
 
 Self-signed certs ship under `nginx/certs/`. Proceed once health checks pass.
 
-## 6. Let’s Encrypt (production TLS)
+On start, backends automatically:
+
+1. Wait for MySQL
+2. Run `prisma migrate deploy`
+3. Run marketplace admin seed when `RUN_MARKETPLACE_ADMIN_SEED=true`
+4. Start the Node processes (jobs worker skips migrate/seed)
+
+---
+
+## Step 6 — Let’s Encrypt (production TLS)
 
 Nginx expects:
 
-- `/etc/nginx/certs/fullchain.pem` → host `nginx/certs/fullchain.pem`
-- `/etc/nginx/certs/privkey.pem` → host `nginx/certs/privkey.pem`
+- Host `nginx/certs/fullchain.pem` → container `/etc/nginx/certs/fullchain.pem`
+- Host `nginx/certs/privkey.pem` → container `/etc/nginx/certs/privkey.pem`
 
-Webroot stub: `nginx/www/certbot/`.
+HTTP servers serve ACME challenges from `nginx/www/certbot` (mounted at `/var/www/certbot`).
 
-### Issue (example with certbot webroot)
+### Issue (webroot)
 
 ```bash
 sudo apt install -y certbot
 
-# Ensure stack is up so port 80 hits nginx
 cd ~/projects/devminds-platform
 docker compose up -d nginx
 
-# Certbot webroot — map challenge dir into the nginx container mount.
-# Adjust -w to the host path that nginx serves as ACME root (nginx/www/certbot).
 sudo certbot certonly --webroot \
   -w "$(pwd)/nginx/www/certbot" \
   -d devminds.net -d www.devminds.net \
@@ -115,10 +160,24 @@ sudo certbot certonly --webroot \
   --email admin@devminds.net --agree-tos --no-eff-email
 ```
 
-If webroot challenges fail, use a temporary standalone stop of nginx on 80, or DNS-01. After issuance:
+### Fallback (standalone)
+
+If webroot fails, free port 80 briefly:
 
 ```bash
-# Copy live certs into the filenames nginx already uses
+docker compose stop nginx
+sudo certbot certonly --standalone \
+  -d devminds.net -d www.devminds.net \
+  -d jobs.devminds.net \
+  -d marketplace.devminds.net -d marketplace.devminds.com \
+  --email admin@devminds.net --agree-tos --no-eff-email
+docker compose start nginx
+```
+
+### Install certs into Nginx filenames
+
+```bash
+cd ~/projects/devminds-platform
 sudo cp /etc/letsencrypt/live/devminds.net/fullchain.pem nginx/certs/fullchain.pem
 sudo cp /etc/letsencrypt/live/devminds.net/privkey.pem nginx/certs/privkey.pem
 sudo chown "$USER:$USER" nginx/certs/*.pem
@@ -129,46 +188,74 @@ docker compose exec nginx nginx -s reload
 
 ```bash
 sudo crontab -e
-# Example daily renew + reload nginx
-0 3 * * * certbot renew --quiet --deploy-hook "cp /etc/letsencrypt/live/devminds.net/fullchain.pem /home/USER/projects/devminds-platform/nginx/certs/fullchain.pem && cp /etc/letsencrypt/live/devminds.net/privkey.pem /home/USER/projects/devminds-platform/nginx/certs/privkey.pem && cd /home/USER/projects/devminds-platform && docker compose exec -T nginx nginx -s reload"
 ```
 
-(Adjust paths/user to match the VPS.)
+Replace `YOUR_USER` with your Linux username:
 
-## 7. Hardening
+```cron
+0 3 * * * certbot renew --quiet --deploy-hook "cp /etc/letsencrypt/live/devminds.net/fullchain.pem /home/YOUR_USER/projects/devminds-platform/nginx/certs/fullchain.pem && cp /etc/letsencrypt/live/devminds.net/privkey.pem /home/YOUR_USER/projects/devminds-platform/nginx/certs/privkey.pem && cd /home/YOUR_USER/projects/devminds-platform && docker compose exec -T nginx nginx -s reload"
+```
 
-- After first successful boot, keep seeds off for subsequent restarts:
-  - `RUN_JOBS_SEEDS=false`
-  - `RUN_MARKETPLACE_ADMIN_SEED=true` (idempotent admin ensure — safe) or `false` once admin exists
-  - `RUN_MARKETPLACE_DEMO_SEEDS=false`
-  - `RUN_ES_REINDEX=false`
-- Optional: `fail2ban`, unattended-upgrades
-- Backup MySQL regularly:
+---
+
+## Step 7 — After first boot (hardening)
+
+Edit `.env.production` (and re-copy), then recreate backends once:
+
+```env
+RUN_JOBS_SEEDS=false
+RUN_MARKETPLACE_ADMIN_SEED=false
+RUN_MARKETPLACE_DEMO_SEEDS=false
+RUN_ES_REINDEX=false
+```
 
 ```bash
+cp .env.production .env
+docker compose up -d --force-recreate jobs-backend marketplace-backend
+```
+
+Optional: `fail2ban`, unattended-upgrades.
+
+Backup MySQL:
+
+```bash
+cd ~/projects/devminds-platform
+set -a && source .env && set +a
 docker compose exec -T mysql \
   mysqldump -uroot -p"$MYSQL_ROOT_PASSWORD" --databases marketplace job_portal \
   > backup-$(date +%F).sql
 ```
 
-- Monitor disk: `docker system df`, volumes `mysql-data` / `elastic-data`
+Monitor disk: `docker system df`.
 
-## 8. Updates / redeploy
+---
+
+## Step 8 — Updates / redeploy
 
 ```bash
 cd ~/projects/devminds-platform
 git pull
 # Also pull sibling app repos
-./scripts/deploy.sh
+./scripts/deploy.sh production
 ```
 
-### Prisma on every backend start
+Fresh MySQL only (keeps Redis/ES/uploads):
 
-| Step | Marketplace | Jobs API |
-|------|-------------|----------|
-| `prisma generate` | Image build (`postinstall` + explicit `npx prisma generate`) | Image build (`npx prisma generate`) |
-| `prisma migrate deploy` | Entrypoint (always) | Entrypoint (always) |
-| Seeds | `seedAdmin.js` if `RUN_MARKETPLACE_ADMIN_SEED=true`; `seedAll.js` if `RUN_MARKETPLACE_DEMO_SEEDS=true` | `prisma db seed` if `RUN_JOBS_SEEDS=true` |
-| ES reindex | Optional if `RUN_ES_REINDEX=true` | Optional if `RUN_ES_REINDEX=true` |
+```bash
+./scripts/rebuild-fresh.sh production
+```
 
-Jobs worker reuses the jobs image but skips migrate/seed (custom entrypoint). Frontend images rebuild when sources or `NEXT_PUBLIC_*` change.
+After a MySQL reset, set `RUN_ES_REINDEX=true` once if search indices are stale, recreate backends, then set it back to `false`.
+
+---
+
+## Appendix — Prisma / seeds on every backend start
+
+| Step | Marketplace | Jobs API | Jobs worker |
+|------|-------------|----------|-------------|
+| `prisma generate` | Image build | Image build | Image build |
+| `prisma migrate deploy` | Entrypoint (always) | Entrypoint (always) | Skipped |
+| Seeds | `seedAdmin.js` / `seedAll.js` via flags | `prisma db seed` via `RUN_JOBS_SEEDS` | Skipped |
+| ES reindex | If `RUN_ES_REINDEX` | If `RUN_ES_REINDEX` | Skipped |
+
+Frontend images rebuild when sources or `NEXT_PUBLIC_*` change.

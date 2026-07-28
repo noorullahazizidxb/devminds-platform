@@ -1,0 +1,23 @@
+# Local overrides — used only with: docker compose -f docker-compose.yml -f docker-compose.local.yml
+# Publish apps on host ports. Skip Nginx (domains + TLS are production-only).
+
+services:
+  jobs-backend:
+    ports:
+      - "4001:4000"
+
+  marketplace-backend:
+    ports:
+      - "4002:4000"
+
+  jobs-frontend:
+    ports:
+      - "3001:3000"
+
+  marketplace-frontend:
+    ports:
+      - "3002:3000"
+
+  # Do not start the domain/TLS edge proxy for local IP:port access.
+  nginx:
+    profiles: ["edge"]
