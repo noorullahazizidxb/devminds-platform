@@ -26,7 +26,7 @@ if ($Env -eq "local") {
   $composeArgs += @("-f", "docker-compose.local.yml")
   Write-Host "==> Local mode: apps on IP:ports (no Nginx)"
 } else {
-  Write-Host "==> Production mode: Nginx + domains"
+  Write-Host "==> Production mode: Nginx + domains (Nginx on 127.0.0.1:8080/8443)"
 }
 
 docker compose @composeArgs config --quiet
@@ -64,4 +64,10 @@ if ($Env -eq "local") {
   Write-Host "  Jobs API:        http://127.0.0.1:4001/health"
   Write-Host "  Marketplace API: http://127.0.0.1:4002/api/health"
   Write-Host "Change LOCAL_PUBLIC_HOST in .env.local for LAN IP access, then redeploy."
+} else {
+  Write-Host ""
+  Write-Host "Production: DevMinds Nginx is on 127.0.0.1:8080 (HTTP) and 127.0.0.1:8443 (HTTPS)."
+  Write-Host "If this VPS also hosts NewLinkAF (ticket.newlinkaf.com), start the edge gateway:"
+  Write-Host "  cd gateway; docker compose up -d"
+  Write-Host "See docs/GATEWAY.md for NewLinkAF port mapping (9080/9443) and routing details."
 }

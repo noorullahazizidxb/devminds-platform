@@ -2,6 +2,8 @@
 
 Docker orchestration for the DevMinds landing site, Jobs portal, and Marketplace — shared MySQL, Redis, Elasticsearch, and Nginx TLS edge.
 
+On a VPS that also runs NewLinkAF (`ticket.newlinkaf.com`), public **80/443** are owned by a separate **edge gateway** (`gateway/`) that routes to DevMinds and NewLinkAF internal Nginx instances. See [docs/GATEWAY.md](docs/GATEWAY.md).
+
 ## Domains
 
 | Host | Service |
@@ -9,8 +11,9 @@ Docker orchestration for the DevMinds landing site, Jobs portal, and Marketplace
 | `devminds.net` / `www.devminds.net` | Static landing (`nginx/www/landing`) |
 | `jobs.devminds.net` | Jobs Next.js frontend + API (`/api`, `/socket.io`, `/uploads`, `/health`) |
 | `marketplace.devminds.net` / `.com` | Marketplace Next.js frontend + API (`/api`, `/socket.io`, `/uploads`, `/health`) |
+| `ticket.newlinkaf.com` | NewLinkAF app (routed by edge gateway only) |
 
-Point DNS (or local hosts) at the machine running this stack. Ports **80** and **443** are published by Nginx.
+Point DNS (or local hosts) at the machine running this stack. With the gateway, public **80/443** are on `edge-gateway-nginx`; DevMinds Nginx binds `127.0.0.1:8080` / `:8443`.
 
 ## Layout
 
@@ -21,9 +24,10 @@ devminds-platform/
 ├── .env                  # Active runtime file (gitignored; copied by deploy)
 ├── docker-compose.yml
 ├── docker-compose.local.yml  # Publishes :3001/:3002/:4001/:4002; skips Nginx
+├── gateway/              # External Nginx gateway (public 80/443 → app Nginxes)
 ├── dockerfiles/          # App Dockerfiles (build contexts point at sibling repos)
 ├── mysql/init/           # Creates marketplace + job_portal databases
-├── nginx/                # Edge proxy + landing + TLS certs + ACME webroot
+├── nginx/                # App edge proxy + landing + TLS certs + ACME webroot
 └── scripts/              # deploy / rebuild-fresh / clean-docker
 ```
 
@@ -40,6 +44,7 @@ Build contexts (relative to this folder):
 |-------|------|
 | Localhost runbook | [docs/LOCALHOST.md](docs/LOCALHOST.md) |
 | Ubuntu VPS + Let’s Encrypt | [docs/DEPLOY-VPS.md](docs/DEPLOY-VPS.md) |
+| External Nginx gateway (shared VPS with NewLinkAF) | [docs/GATEWAY.md](docs/GATEWAY.md) |
 
 ## Quick start (localhost — IP + ports)
 
@@ -139,7 +144,8 @@ docker compose logs -f jobs-backend marketplace-backend nginx
 | `jobs-frontend` | Next.js | Bakes `NEXT_PUBLIC_API_BASE` |
 | `marketplace-backend` | Dockerfile | Admin/demo seeds via flags |
 | `marketplace-frontend` | Next.js | Bakes marketplace public + internal `API_BASE` |
-| `nginx` | `1.27-alpine` | HTTP + HTTPS + ACME webroot |
+| `nginx` | `1.27-alpine` | App edge on `127.0.0.1:8080`/`8443` (public 80/443 via `gateway/`) |
+| `gateway-nginx` | `1.27-alpine` | Separate compose in `gateway/` — public 80/443 SNI/Host router |
 
 ## Environment notes
 
