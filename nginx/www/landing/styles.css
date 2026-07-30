@@ -1,353 +1,854 @@
 :root {
   color-scheme: dark;
-  --ink: #f4f1ea;
-  --ink-dim: rgba(244, 241, 234, 0.62);
-  --ink-quiet: rgba(244, 241, 234, 0.38);
-  --jobs-accent: #f0a35a;
-  --jobs-deep: #c45e1a;
-  --jobs-glow: rgba(240, 163, 90, 0.28);
-  --market-accent: #2dd4bf;
-  --market-deep: #0f766e;
-  --market-glow: rgba(45, 212, 191, 0.26);
-  --bg: #07090d;
-  --jobs-bg: #0e0c0a;
-  --market-bg: #060b0f;
-  --ease: cubic-bezier(0.22, 0.85, 0.28, 1);
-  --seam-shift: 0%;
-  --font-display: "Instrument Serif", Georgia, "Times New Roman", serif;
-  --font-body: "Sora", ui-sans-serif, system-ui, sans-serif;
+  --bg: #050710;
+  --paper: #f7f8ff;
+  --muted: rgba(235, 240, 255, 0.66);
+  --quiet: rgba(235, 240, 255, 0.42);
+  --hairline: rgba(255, 255, 255, 0.12);
+  --careers: #22d3ee;
+  --careers-blue: #2f6bff;
+  --careers-soft: rgba(34, 211, 238, 0.18);
+  --market: #a855f7;
+  --market-pink: #ec4899;
+  --market-soft: rgba(168, 85, 247, 0.2);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.2, 0.9, 0.25, 1.15);
+  --font-display: "Space Grotesk", "Segoe UI", sans-serif;
+  --font-body: "Manrope", "Segoe UI", sans-serif;
+  --pointer-x: 50vw;
+  --pointer-y: 50vh;
 }
 
-*, *::before, *::after { box-sizing: border-box; }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
 
 html {
   min-width: 320px;
+  min-height: 100%;
   background: var(--bg);
 }
 
 body {
   margin: 0;
+  min-width: 320px;
   min-height: 100vh;
   min-height: 100svh;
-  color: var(--ink);
-  font-family: var(--font-body);
-  background: var(--bg);
   overflow: hidden;
-  cursor: none;
+  color: var(--paper);
+  background: var(--bg);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-@media (hover: none), (pointer: coarse) {
-  body { cursor: auto; }
-  .cursor-hint { display: none !important; }
+button,
+a {
+  font: inherit;
 }
 
-a { color: inherit; text-decoration: none; }
+a {
+  color: inherit;
+  text-decoration: none;
+}
 
-.grain {
+img,
+svg {
+  display: block;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
   position: fixed;
-  inset: 0;
-  z-index: 40;
-  pointer-events: none;
-  opacity: 0.045;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  mix-blend-mode: overlay;
+  top: 12px;
+  left: 12px;
+  z-index: 100;
+  padding: 10px 14px;
+  border-radius: 999px;
+  color: #071018;
+  background: var(--paper);
+  font-size: 0.78rem;
+  font-weight: 800;
+  transform: translateY(-180%);
+  transition: transform 180ms ease;
 }
 
-/* ── Stage ── */
-.stage {
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+.experience {
   position: relative;
   width: 100%;
+  height: 100vh;
   height: 100svh;
+  min-height: 650px;
   overflow: hidden;
   isolation: isolate;
+  background: var(--bg);
+  --careers-clip: polygon(0 0, 100% 0, 0 100%);
+  --market-clip: polygon(100% 0, 100% 100%, 0 100%);
+  --connector-shift-x: 0%;
+  --connector-shift-y: 0%;
 }
 
-/* ── Wedges (desktop diagonal TR → BL) ──
-   Diagonal line: from top-right (100% 0) to bottom-left (0 100%).
-   Jobs = points ON/ABOVE the diagonal (upper-left mass).
-   Market = points ON/BELOW the diagonal (lower-right mass).
-   --seam-shift expands the active wedge along the normal of the diagonal. */
-.wedge {
+.experience[data-active="careers"] {
+  --careers-clip: polygon(0 0, 100% 0, 18% 100%, 0 100%);
+  --market-clip: polygon(100% 0, 100% 100%, 18% 100%);
+  --connector-shift-x: -5.8%;
+  --connector-shift-y: 5.8%;
+}
+
+.experience[data-active="marketplace"] {
+  --careers-clip: polygon(0 0, 82% 0, 0 100%);
+  --market-clip: polygon(82% 0, 100% 0, 100% 100%, 0 100%);
+  --connector-shift-x: 5.8%;
+  --connector-shift-y: -5.8%;
+}
+
+.experience__noise {
   position: absolute;
   inset: 0;
+  z-index: 30;
+  pointer-events: none;
+  opacity: 0.032;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 220 220' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='.85'/%3E%3C/svg%3E");
+  mix-blend-mode: soft-light;
+}
+
+.experience__pointer-glow {
+  position: fixed;
+  top: var(--pointer-y);
+  left: var(--pointer-x);
+  z-index: 8;
+  width: 30rem;
+  height: 30rem;
+  pointer-events: none;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.025) 28%, transparent 68%);
+  transform: translate(-50%, -50%);
+  filter: blur(3px);
+  opacity: 0.8;
+  transition: opacity 320ms ease;
+}
+
+.masthead {
+  position: absolute;
+  top: max(20px, env(safe-area-inset-top));
+  left: 50%;
+  z-index: 20;
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  width: min(260px, 28vw);
+  pointer-events: none;
+  transform: translateX(-50%);
+  transition: opacity 280ms ease, transform 500ms var(--ease-out);
+}
+
+.experience[data-active="careers"] .masthead {
+  opacity: 0.42;
+  transform: translateX(-56%);
+}
+
+.experience[data-active="marketplace"] .masthead {
+  opacity: 0.42;
+  transform: translateX(-44%);
+}
+
+.masthead__brand {
+  position: relative;
+  width: clamp(118px, 10vw, 158px);
+  height: 50px;
   overflow: hidden;
-  color: var(--ink);
-  transition:
-    clip-path 0.55s var(--ease),
-    filter 0.45s ease,
-    opacity 0.45s ease;
+}
+
+.masthead__brand img {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 100%;
+  height: auto;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 8px 28px rgba(45, 112, 255, 0.3));
+}
+
+.masthead__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: rgba(235, 240, 255, 0.52);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.masthead__status {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #86efac;
+  box-shadow: 0 0 0 5px rgba(134, 239, 172, 0.1), 0 0 18px rgba(134, 239, 172, 0.5);
+  animation: status-pulse 2.4s ease-in-out infinite;
+}
+
+.portal {
+  position: absolute;
+  inset: 0;
   z-index: 1;
-}
-
-.wedge:focus-visible {
+  overflow: hidden;
   outline: none;
-  z-index: 5;
+  isolation: isolate;
+  will-change: clip-path, filter, opacity;
+  transition:
+    clip-path 760ms var(--ease-out),
+    filter 560ms ease,
+    opacity 560ms ease;
 }
 
-.wedge.jobs {
+.portal--careers {
   z-index: 2;
+  clip-path: var(--careers-clip);
   background:
-    radial-gradient(ellipse 70% 55% at 18% 28%, rgba(240, 163, 90, 0.18), transparent 60%),
-    radial-gradient(ellipse 40% 40% at 40% 70%, rgba(196, 94, 26, 0.12), transparent 55%),
-    linear-gradient(145deg, #16110c 0%, var(--jobs-bg) 45%, #0a0908 100%);
-  /* Default: upper-left of TR→BL diagonal */
-  clip-path: polygon(0 0, 100% 0, 0 100%);
-  justify-content: flex-start;
+    radial-gradient(circle at 16% 18%, rgba(28, 206, 255, 0.16), transparent 29%),
+    radial-gradient(circle at 53% 42%, rgba(47, 107, 255, 0.12), transparent 34%),
+    linear-gradient(145deg, #07192d 0%, #071321 42%, #060b16 100%);
+}
+
+.portal--marketplace {
+  z-index: 1;
+  clip-path: var(--market-clip);
+  background:
+    radial-gradient(circle at 83% 78%, rgba(168, 85, 247, 0.2), transparent 31%),
+    radial-gradient(circle at 60% 57%, rgba(236, 72, 153, 0.1), transparent 30%),
+    linear-gradient(325deg, #1b0929 0%, #10091e 45%, #080914 100%);
+}
+
+.experience[data-active="careers"] .portal--careers,
+.experience[data-active="marketplace"] .portal--marketplace {
+  z-index: 4;
+}
+
+.experience[data-active="careers"] .portal--marketplace,
+.experience[data-active="marketplace"] .portal--careers {
+  opacity: 0.78;
+  filter: brightness(0.5) saturate(0.72);
+}
+
+.portal:focus-visible {
+  z-index: 9;
+}
+
+.portal--careers:focus-visible {
+  box-shadow: inset 0 0 0 3px var(--careers), inset 0 0 90px rgba(34, 211, 238, 0.16);
+}
+
+.portal--marketplace:focus-visible {
+  box-shadow: inset 0 0 0 3px var(--market), inset 0 0 90px rgba(168, 85, 247, 0.18);
+}
+
+.portal__surface,
+.portal__grid,
+.portal__orb,
+.signal-map {
+  position: absolute;
+  pointer-events: none;
+}
+
+.portal__surface {
+  inset: 0;
+  overflow: hidden;
+}
+
+.portal__surface::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.44;
+  background:
+    linear-gradient(120deg, transparent 0 48%, rgba(255, 255, 255, 0.035) 49%, transparent 50% 100%),
+    repeating-linear-gradient(120deg, transparent 0 84px, rgba(255, 255, 255, 0.018) 85px, transparent 86px 172px);
+  transform: translate3d(calc((var(--pointer-x) - 50vw) * 0.012), calc((var(--pointer-y) - 50vh) * 0.012), 0);
+  transition: opacity 420ms ease;
+}
+
+.portal__grid {
+  inset: -10%;
+  opacity: 0.24;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+  background-size: 54px 54px;
+  -webkit-mask-image: radial-gradient(circle at center, black 0 20%, transparent 72%);
+  mask-image: radial-gradient(circle at center, black 0 20%, transparent 72%);
+  transform: perspective(800px) rotateX(62deg) scale(1.35) translateY(18%);
+  transform-origin: center;
+}
+
+.portal--marketplace .portal__grid {
+  transform: perspective(800px) rotateX(62deg) scale(1.35) translateY(-18%) rotate(180deg);
+}
+
+.portal__orb {
+  border-radius: 50%;
+  filter: blur(1px);
+  opacity: 0.72;
+  mix-blend-mode: screen;
+  transition: transform 900ms var(--ease-out), opacity 500ms ease;
+}
+
+.portal--careers .portal__orb--one {
+  top: -16vw;
+  left: -12vw;
+  width: 44vw;
+  height: 44vw;
+  border: 1px solid rgba(89, 222, 255, 0.18);
+  box-shadow: inset 0 0 100px rgba(34, 211, 238, 0.08), 0 0 100px rgba(34, 211, 238, 0.08);
+}
+
+.portal--careers .portal__orb--two {
+  top: 10%;
+  left: 24%;
+  width: 20vw;
+  height: 20vw;
+  background: radial-gradient(circle at 40% 40%, rgba(62, 169, 255, 0.19), transparent 66%);
+}
+
+.portal--marketplace .portal__orb--one {
+  right: -13vw;
+  bottom: -17vw;
+  width: 46vw;
+  height: 46vw;
+  border: 1px solid rgba(199, 127, 255, 0.18);
+  box-shadow: inset 0 0 110px rgba(168, 85, 247, 0.08), 0 0 110px rgba(168, 85, 247, 0.08);
+}
+
+.portal--marketplace .portal__orb--two {
+  right: 24%;
+  bottom: 9%;
+  width: 20vw;
+  height: 20vw;
+  background: radial-gradient(circle at 60% 60%, rgba(214, 76, 223, 0.17), transparent 66%);
+}
+
+.experience[data-active="careers"] .portal--careers .portal__orb--one,
+.experience[data-active="careers"] .portal--careers .portal__orb--two,
+.experience[data-active="marketplace"] .portal--marketplace .portal__orb--one,
+.experience[data-active="marketplace"] .portal--marketplace .portal__orb--two {
+  transform: scale(1.13);
+  opacity: 1;
+}
+
+.signal-map {
+  width: clamp(190px, 25vw, 390px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  opacity: 0.52;
+  transition: opacity 500ms ease, transform 850ms var(--ease-out);
+}
+
+.signal-map--careers {
+  top: 10%;
+  left: 25%;
+}
+
+.signal-map--marketplace {
+  right: 24%;
+  bottom: 8%;
+}
+
+.signal-map__ring,
+.signal-map__node {
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+}
+
+.signal-map__ring {
+  inset: 50%;
+  border: 1px solid currentColor;
+  transform: translate(-50%, -50%);
+  animation: map-breathe 6s ease-in-out infinite;
+}
+
+.signal-map--careers {
+  color: rgba(85, 220, 255, 0.24);
+}
+
+.signal-map--marketplace {
+  color: rgba(205, 125, 255, 0.24);
+}
+
+.signal-map__ring--one {
+  width: 34%;
+  height: 34%;
+}
+
+.signal-map__ring--two {
+  width: 62%;
+  height: 62%;
+  animation-delay: -2s;
+}
+
+.signal-map__ring--three {
+  width: 92%;
+  height: 92%;
+  animation-delay: -4s;
+}
+
+.signal-map__node {
+  width: 8px;
+  height: 8px;
+  background: currentColor;
+  box-shadow: 0 0 18px currentColor;
+}
+
+.signal-map--careers .signal-map__node {
+  color: var(--careers);
+}
+
+.signal-map--marketplace .signal-map__node {
+  color: var(--market);
+}
+
+.signal-map__node--one {
+  top: 22%;
+  left: 66%;
+}
+
+.signal-map__node--two {
+  top: 63%;
+  left: 19%;
+}
+
+.signal-map__node--three {
+  top: 71%;
+  left: 75%;
+}
+
+.experience[data-active="careers"] .signal-map--careers,
+.experience[data-active="marketplace"] .signal-map--marketplace {
+  opacity: 0.92;
+  transform: scale(1.08) rotate(5deg);
+}
+
+.portal__content {
+  position: absolute;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  width: min(42vw, 650px);
+  pointer-events: none;
+  transition: transform 700ms var(--ease-out), opacity 450ms ease;
+}
+
+.portal__content--careers {
+  top: clamp(108px, 14vh, 150px);
+  left: clamp(34px, 5.4vw, 96px);
   align-items: flex-start;
 }
 
-.wedge.market {
-  z-index: 1;
-  background:
-    radial-gradient(ellipse 70% 55% at 82% 72%, rgba(45, 212, 191, 0.16), transparent 60%),
-    radial-gradient(ellipse 40% 40% at 60% 30%, rgba(15, 118, 110, 0.14), transparent 55%),
-    linear-gradient(325deg, #06141a 0%, var(--market-bg) 45%, #05080c 100%);
-  clip-path: polygon(100% 0, 100% 100%, 0 100%);
-  justify-content: flex-end;
+.portal__content--marketplace {
+  right: clamp(34px, 5.4vw, 96px);
+  bottom: clamp(58px, 8vh, 94px);
   align-items: flex-end;
-}
-
-/* Expand jobs toward market (shift seam) */
-.stage[data-active="jobs"] .wedge.jobs {
-  clip-path: polygon(0 0, 100% 0, 18% 100%, 0 100%);
-  z-index: 3;
-}
-.stage[data-active="jobs"] .wedge.market {
-  clip-path: polygon(100% 0, 100% 100%, 18% 100%);
-  filter: brightness(0.55) saturate(0.7);
-  opacity: 0.85;
-}
-
-/* Expand market toward jobs */
-.stage[data-active="market"] .wedge.market {
-  clip-path: polygon(82% 0, 100% 0, 100% 100%, 0 100%);
-  z-index: 3;
-}
-.stage[data-active="market"] .wedge.jobs {
-  clip-path: polygon(0 0, 82% 0, 0 100%);
-  filter: brightness(0.55) saturate(0.7);
-  opacity: 0.85;
-}
-
-.wedge.jobs:focus-visible {
-  box-shadow: inset 0 0 0 3px var(--jobs-accent);
-}
-.wedge.market:focus-visible {
-  box-shadow: inset 0 0 0 3px var(--market-accent);
-}
-
-.wedge-atmosphere {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.5;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-  background-size: 56px 56px;
-  mask-image: radial-gradient(ellipse 80% 70% at 50% 50%, #000 20%, transparent 75%);
-  transition: opacity 0.45s ease;
-}
-.stage[data-active="jobs"] .wedge.jobs .wedge-atmosphere,
-.stage[data-active="market"] .wedge.market .wedge-atmosphere {
-  opacity: 0.85;
-}
-
-.wedge-inner {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  max-width: min(480px, 42vw);
-  padding: clamp(28px, 5vw, 72px);
-  pointer-events: none;
-}
-
-.wedge.jobs .wedge-inner {
-  padding-top: clamp(36px, 7vh, 88px);
-  padding-left: clamp(28px, 5vw, 80px);
-  padding-right: clamp(20px, 3vw, 40px);
-}
-
-.wedge.market .wedge-inner {
   text-align: right;
-  align-items: flex-end;
-  padding-bottom: clamp(36px, 7vh, 88px);
-  padding-right: clamp(28px, 5vw, 80px);
-  padding-left: clamp(20px, 3vw, 40px);
 }
 
-.product-label {
+.experience[data-active="careers"] .portal__content--careers {
+  transform: translate3d(1.1vw, -0.5vh, 0) scale(1.018);
+}
+
+.experience[data-active="marketplace"] .portal__content--marketplace {
+  transform: translate3d(-1.1vw, 0.5vh, 0) scale(1.018);
+}
+
+.portal__eyebrow {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  margin: 0 0 18px;
-  color: var(--jobs-accent);
-  font-size: 11px;
-  font-weight: 650;
-  letter-spacing: 0.22em;
+  margin-bottom: clamp(18px, 2.2vh, 26px);
+  color: var(--careers);
+  font-size: clamp(0.67rem, 0.68vw, 0.78rem);
+  font-weight: 800;
+  letter-spacing: 0.17em;
   text-transform: uppercase;
 }
-.wedge.market .product-label {
-  color: var(--market-accent);
+
+.portal--marketplace .portal__eyebrow {
+  color: #c176ff;
   flex-direction: row-reverse;
 }
 
-.label-mark {
+.portal__icon {
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
+  width: 38px;
+  height: 38px;
   border: 1px solid currentColor;
-  background: color-mix(in srgb, currentColor 12%, transparent);
-}
-.label-mark svg { width: 18px; height: 18px; }
-
-.type-title {
-  margin: 0;
-  min-height: 1.15em;
-  font-family: var(--font-display);
-  font-size: clamp(2.4rem, 5.2vw, 4.6rem);
-  font-weight: 400;
-  letter-spacing: -0.03em;
-  line-height: 1.1;
-  text-wrap: balance;
+  border-radius: 13px;
+  background: color-mix(in srgb, currentColor 9%, transparent);
+  box-shadow: inset 0 0 18px color-mix(in srgb, currentColor 10%, transparent);
 }
 
-.type-subtitle {
-  margin: 16px 0 0;
-  min-height: 3.2em;
-  max-width: 36ch;
-  color: var(--ink-dim);
-  font-size: clamp(0.92rem, 1.15vw, 1.08rem);
-  font-weight: 400;
-  line-height: 1.55;
-  text-wrap: pretty;
+.portal__icon svg {
+  width: 19px;
+  height: 19px;
+  stroke: currentColor;
+  stroke-width: 1.55;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
-.type-text { white-space: pre-wrap; }
-
-.caret {
-  display: inline-block;
-  width: 0.08em;
-  height: 0.85em;
-  margin-left: 2px;
-  vertical-align: -0.05em;
-  background: currentColor;
-  animation: blink 0.9s steps(1) infinite;
-}
-.wedge.jobs .type-title .caret { background: var(--jobs-accent); }
-.wedge.market .type-title .caret { background: var(--market-accent); }
-.type-subtitle .caret { opacity: 0.55; height: 0.9em; }
-
-@keyframes blink {
-  0%, 48% { opacity: 1; }
-  49%, 100% { opacity: 0; }
-}
-
-.benefits {
-  list-style: none;
-  margin: 28px 0 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.wedge.market .benefits { align-items: flex-end; }
-
-.benefits li {
+.portal__category {
   position: relative;
-  color: var(--ink-quiet);
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  line-height: 1.4;
-  padding-left: 14px;
-  transition: color 0.35s ease;
+  padding-left: 12px;
+  color: rgba(235, 240, 255, 0.42);
+  font-weight: 700;
 }
-.wedge.market .benefits li {
-  padding-left: 0;
-  padding-right: 14px;
-}
-.benefits li::before {
+
+.portal__category::before {
   content: "";
   position: absolute;
+  top: 50%;
   left: 0;
-  top: 0.55em;
-  width: 6px;
-  height: 1px;
-  background: var(--jobs-accent);
-}
-.wedge.market .benefits li::before {
-  left: auto;
-  right: 0;
-  background: var(--market-accent);
-}
-.stage[data-active="jobs"] .wedge.jobs .benefits li,
-.stage[data-active="market"] .wedge.market .benefits li {
-  color: var(--ink-dim);
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: currentColor;
+  transform: translateY(-50%);
 }
 
-.cta {
-  margin-top: 32px;
+.portal--marketplace .portal__category {
+  padding-right: 12px;
+  padding-left: 0;
+}
+
+.portal--marketplace .portal__category::before {
+  right: 0;
+  left: auto;
+}
+
+.portal__type-block {
+  min-width: 0;
+}
+
+.portal__title {
+  max-width: 12ch;
+  min-height: 2.15em;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(2.65rem, 5.15vw, 5.6rem);
+  font-weight: 600;
+  letter-spacing: -0.065em;
+  line-height: 0.96;
+  text-shadow: 0 18px 64px rgba(0, 0, 0, 0.36);
+}
+
+.portal__subtitle {
+  max-width: 47ch;
+  min-height: 4.65em;
+  margin: clamp(18px, 2.2vh, 24px) 0 0;
+  color: var(--muted);
+  font-size: clamp(0.9rem, 1vw, 1.08rem);
+  font-weight: 500;
+  line-height: 1.68;
+}
+
+.typewriter__text {
+  white-space: pre-wrap;
+}
+
+.typewriter__caret {
+  display: inline-block;
+  width: 0.075em;
+  height: 0.82em;
+  margin-left: 0.06em;
+  vertical-align: -0.03em;
+  border-radius: 999px;
+  background: currentColor;
+  box-shadow: 0 0 16px currentColor;
+  animation: caret-blink 0.9s steps(1, end) infinite;
+}
+
+.portal--careers .portal__title .typewriter__caret {
+  color: var(--careers);
+}
+
+.portal--marketplace .portal__title .typewriter__caret {
+  color: #c176ff;
+}
+
+.portal__subtitle .typewriter__caret {
+  height: 0.9em;
+  opacity: 0.48;
+  box-shadow: none;
+}
+
+.portal__benefits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: clamp(22px, 3vh, 34px);
+}
+
+.portal__content--marketplace .portal__benefits {
+  justify-content: flex-end;
+}
+
+.portal__benefits span {
+  padding: 9px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  color: rgba(235, 240, 255, 0.55);
+  background: rgba(255, 255, 255, 0.035);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  font-size: clamp(0.66rem, 0.66vw, 0.76rem);
+  font-weight: 600;
+  letter-spacing: 0.015em;
+  white-space: nowrap;
+  transition: border-color 360ms ease, background 360ms ease, color 360ms ease, transform 500ms var(--ease-out);
+}
+
+.portal__benefits strong {
+  color: rgba(247, 248, 255, 0.9);
+  font-weight: 800;
+}
+
+.experience[data-active="careers"] .portal--careers .portal__benefits span {
+  color: rgba(219, 249, 255, 0.78);
+  border-color: rgba(34, 211, 238, 0.22);
+  background: rgba(34, 211, 238, 0.08);
+  transform: translateY(-2px);
+}
+
+.experience[data-active="marketplace"] .portal--marketplace .portal__benefits span {
+  color: rgba(245, 226, 255, 0.8);
+  border-color: rgba(168, 85, 247, 0.24);
+  background: rgba(168, 85, 247, 0.09);
+  transform: translateY(-2px);
+}
+
+.portal__footer {
+  display: flex;
+  align-items: center;
+  gap: clamp(16px, 2vw, 28px);
+  margin-top: clamp(24px, 3.4vh, 38px);
+}
+
+.portal__content--marketplace .portal__footer {
+  flex-direction: row-reverse;
+}
+
+.portal__audience {
+  color: var(--quiet);
+  font-size: clamp(0.67rem, 0.67vw, 0.76rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.portal__cta {
   display: inline-flex;
   align-items: center;
   gap: 12px;
-  padding: 14px 22px;
-  border: 1px solid color-mix(in srgb, var(--jobs-accent) 45%, transparent);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--jobs-accent) 12%, transparent);
-  color: var(--jobs-accent);
-  font-size: 12px;
-  font-weight: 650;
-  letter-spacing: 0.14em;
+  color: var(--paper);
+  font-size: clamp(0.7rem, 0.72vw, 0.8rem);
+  font-weight: 800;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  transition: background 0.35s ease, border-color 0.35s ease, transform 0.35s var(--ease), box-shadow 0.35s ease;
+  white-space: nowrap;
 }
-.wedge.market .cta {
-  border-color: color-mix(in srgb, var(--market-accent) 45%, transparent);
-  background: color-mix(in srgb, var(--market-accent) 12%, transparent);
-  color: var(--market-accent);
+
+.portal__content--marketplace .portal__cta {
   flex-direction: row-reverse;
 }
-.cta svg {
+
+.portal__cta-icon {
+  display: grid;
+  place-items: center;
+  width: 43px;
+  height: 43px;
+  border: 1px solid rgba(34, 211, 238, 0.48);
+  border-radius: 50%;
+  color: var(--careers);
+  background: rgba(34, 211, 238, 0.08);
+  box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.16);
+  transition: transform 500ms var(--ease-spring), background 360ms ease, box-shadow 500ms ease;
+}
+
+.portal--marketplace .portal__cta-icon {
+  color: #c176ff;
+  border-color: rgba(193, 118, 255, 0.5);
+  background: rgba(168, 85, 247, 0.09);
+}
+
+.portal__cta-icon svg {
   width: 18px;
   height: 18px;
-  fill: none;
   stroke: currentColor;
-  stroke-width: 1.6;
+  stroke-width: 1.7;
   stroke-linecap: round;
   stroke-linejoin: round;
-  transition: transform 0.35s var(--ease);
 }
-.stage[data-active="jobs"] .wedge.jobs .cta {
-  background: color-mix(in srgb, var(--jobs-accent) 22%, transparent);
-  border-color: var(--jobs-accent);
-  box-shadow: 0 0 40px var(--jobs-glow);
-  transform: translateY(-2px);
-}
-.stage[data-active="market"] .wedge.market .cta {
-  background: color-mix(in srgb, var(--market-accent) 22%, transparent);
-  border-color: var(--market-accent);
-  box-shadow: 0 0 40px var(--market-glow);
-  transform: translateY(-2px);
-}
-.stage[data-active="jobs"] .wedge.jobs .cta svg { transform: translateX(4px); }
-.stage[data-active="market"] .wedge.market .cta svg { transform: translateX(-4px); }
 
-/* ── Diagonal seam ── */
-.seam {
+.experience[data-active="careers"] .portal--careers .portal__cta-icon {
+  background: var(--careers);
+  color: #051018;
+  box-shadow: 0 0 0 10px rgba(34, 211, 238, 0.08), 0 0 34px rgba(34, 211, 238, 0.32);
+  transform: translateX(7px) scale(1.04);
+}
+
+.experience[data-active="marketplace"] .portal--marketplace .portal__cta-icon {
+  background: #b765f7;
+  color: #100618;
+  box-shadow: 0 0 0 10px rgba(168, 85, 247, 0.09), 0 0 34px rgba(168, 85, 247, 0.34);
+  transform: translateX(-7px) scale(1.04);
+}
+
+.portal__preview {
+  position: absolute;
+  z-index: 3;
+  width: clamp(185px, 17vw, 285px);
+  pointer-events: none;
+  opacity: 0.64;
+  transition: opacity 500ms ease, transform 750ms var(--ease-out);
+}
+
+.portal__preview--careers {
+  top: 13%;
+  left: 42%;
+  transform: rotate(4deg);
+}
+
+.portal__preview--marketplace {
+  right: 41%;
+  bottom: 10%;
+  transform: rotate(-4deg);
+}
+
+.experience[data-active="careers"] .portal__preview--careers {
+  opacity: 1;
+  transform: translate(-1vw, 1vh) rotate(1deg) scale(1.035);
+}
+
+.experience[data-active="marketplace"] .portal__preview--marketplace {
+  opacity: 1;
+  transform: translate(1vw, -1vh) rotate(-1deg) scale(1.035);
+}
+
+.preview-card {
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  background: rgba(7, 13, 28, 0.5);
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.28);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+}
+
+.portal--marketplace .preview-card {
+  background: rgba(22, 7, 33, 0.52);
+}
+
+.preview-card--primary {
+  padding: 16px 17px 15px;
+  border-radius: 18px;
+}
+
+.preview-card__label {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--quiet);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.preview-card--primary strong {
+  display: block;
+  color: rgba(247, 248, 255, 0.88);
+  font-size: clamp(0.72rem, 0.76vw, 0.86rem);
+  font-weight: 700;
+}
+
+.preview-card__progress {
+  height: 3px;
+  margin-top: 13px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.preview-card__progress span {
+  display: block;
+  width: 68%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--careers-blue), var(--careers));
+  box-shadow: 0 0 16px rgba(34, 211, 238, 0.52);
+  animation: progress-breathe 3.2s ease-in-out infinite;
+}
+
+.portal--marketplace .preview-card__progress span {
+  background: linear-gradient(90deg, var(--market-pink), var(--market));
+  box-shadow: 0 0 16px rgba(168, 85, 247, 0.52);
+}
+
+.preview-card--floating {
+  position: absolute;
+  top: -27px;
+  right: -22px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: 999px;
+  color: rgba(247, 248, 255, 0.76);
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  animation: card-float 4.6s ease-in-out infinite;
+}
+
+.preview-card__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--careers);
+  box-shadow: 0 0 14px var(--careers);
+}
+
+.portal--marketplace .preview-card__dot {
+  background: #c176ff;
+  box-shadow: 0 0 14px #c176ff;
+}
+
+.connector {
   position: absolute;
   inset: 0;
-  z-index: 10;
+  z-index: 12;
   pointer-events: none;
-  transition: opacity 0.4s ease, transform 0.55s var(--ease);
+  transform: translate(var(--connector-shift-x), var(--connector-shift-y));
+  transition: transform 760ms var(--ease-out), opacity 420ms ease;
 }
 
-.seam-svg {
+.connector__svg {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -355,280 +856,607 @@ a { color: inherit; text-decoration: none; }
   overflow: visible;
 }
 
-.seam-base {
-  stroke: url(#seamGrad);
-  stroke-width: 0.35;
-  stroke-linecap: round;
-  opacity: 0.55;
+.connector__aura,
+.connector__line,
+.connector__circuit,
+.connector__pulse {
   vector-effect: non-scaling-stroke;
-}
-
-.seam-dash {
-  stroke: rgba(244, 241, 234, 0.35);
-  stroke-width: 0.2;
-  stroke-dasharray: 1.2 2.4;
   stroke-linecap: round;
-  vector-effect: non-scaling-stroke;
-  animation: seam-dash-move 14s linear infinite;
 }
 
-.seam-travel {
-  stroke: url(#seamGlow);
-  stroke-width: 1.1;
-  stroke-linecap: round;
-  stroke-dasharray: 12 88;
-  vector-effect: non-scaling-stroke;
-  filter: drop-shadow(0 0 6px rgba(240, 163, 90, 0.45)) drop-shadow(0 0 6px rgba(45, 212, 191, 0.45));
-  animation: seam-travel 3.8s ease-in-out infinite;
+.connector__aura {
+  stroke: url(#connector-gradient);
+  stroke-width: 17;
+  opacity: 0.08;
+  filter: blur(15px);
 }
 
-@keyframes seam-dash-move {
-  to { stroke-dashoffset: -28; }
+.connector__line {
+  stroke: url(#connector-gradient);
+  stroke-width: 1.6;
+  opacity: 0.72;
+  filter: url(#connector-glow);
 }
 
-@keyframes seam-travel {
-  0% { stroke-dashoffset: 100; opacity: 0.35; }
-  40% { opacity: 1; }
-  100% { stroke-dashoffset: 0; opacity: 0.35; }
+.connector__circuit {
+  stroke: rgba(255, 255, 255, 0.5);
+  stroke-width: 0.65;
+  stroke-dasharray: 1 8;
+  opacity: 0.58;
+  animation: circuit-flow 16s linear infinite;
 }
 
-.brand-hinge {
+.connector__pulse {
+  stroke: url(#connector-pulse);
+  stroke-width: 4.6;
+  stroke-dasharray: 9 91;
+  opacity: 0.72;
+  filter: url(#connector-glow);
+  animation: connector-travel 4.4s linear infinite;
+}
+
+.connector__pulse--two {
+  animation-delay: -2.2s;
+  opacity: 0.45;
+}
+
+.connector__node {
+  position: absolute;
+  width: 11px;
+  height: 11px;
+  border: 2px solid rgba(247, 248, 255, 0.78);
+  border-radius: 50%;
+  background: #080b15;
+  box-shadow: 0 0 0 7px rgba(255, 255, 255, 0.04), 0 0 24px rgba(255, 255, 255, 0.28);
+}
+
+.connector__node--north {
+  top: 25%;
+  right: 25%;
+  color: #b85df8;
+}
+
+.connector__node--south {
+  bottom: 25%;
+  left: 25%;
+  color: var(--careers);
+}
+
+.connector__node::before,
+.connector__node::after {
+  content: "";
+  position: absolute;
+  inset: 50%;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: node-ripple 3s ease-out infinite;
+}
+
+.connector__node::after {
+  animation-delay: -1.5s;
+}
+
+.connector__core {
   position: absolute;
   top: 50%;
   left: 50%;
+  display: grid;
+  place-items: center;
+  width: clamp(132px, 11.5vw, 184px);
+  aspect-ratio: 1;
   transform: translate(-50%, -50%);
+}
+
+.connector__core-ring {
+  position: absolute;
+  inset: 50%;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.connector__core-ring--one {
+  width: 100%;
+  height: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(6, 8, 18, 0.26);
+  box-shadow: inset 0 0 36px rgba(255, 255, 255, 0.045), 0 0 60px rgba(20, 140, 255, 0.1);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  animation: core-rotate 18s linear infinite;
+}
+
+.connector__core-ring--one::before,
+.connector__core-ring--one::after {
+  content: "";
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--careers);
+  box-shadow: 0 0 15px var(--careers);
+}
+
+.connector__core-ring--one::before {
+  top: 8%;
+  left: 26%;
+}
+
+.connector__core-ring--one::after {
+  right: 18%;
+  bottom: 11%;
+  background: var(--market);
+  box-shadow: 0 0 15px var(--market);
+}
+
+.connector__core-ring--two {
+  width: 80%;
+  height: 80%;
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+  animation: core-rotate-reverse 14s linear infinite;
+}
+
+.connector__brand {
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  animation: hinge-settle 1.1s var(--ease) both;
+  gap: 1px;
+  width: 72%;
+  padding: 12px 13px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 16px;
+  background: rgba(6, 8, 18, 0.72);
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.36);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
 }
 
-.brand-hinge img {
-  width: clamp(56px, 7vw, 88px);
+.connector__brand img {
+  width: 100%;
   height: auto;
-  display: block;
-  filter: drop-shadow(0 8px 28px rgba(0, 0, 0, 0.55));
-  animation: hinge-pulse 4.5s ease-in-out infinite;
-  border-radius: 18px;
+  filter: drop-shadow(0 5px 16px rgba(47, 107, 255, 0.24));
 }
 
-.brand-name {
-  font-family: var(--font-display);
-  font-size: clamp(0.95rem, 1.4vw, 1.2rem);
-  letter-spacing: 0.08em;
-  color: var(--ink);
-  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.65);
-  opacity: 0.92;
-}
-
-@keyframes hinge-settle {
-  from {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.7) rotate(-18deg);
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1) rotate(0deg);
-  }
-}
-
-@keyframes hinge-pulse {
-  0%, 100% { filter: drop-shadow(0 8px 28px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 0 transparent); }
-  50% { filter: drop-shadow(0 8px 28px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 22px rgba(232, 228, 220, 0.35)); }
-}
-
-.stage[data-active="jobs"] .seam {
-  transform: translate(-6%, 6%);
-}
-.stage[data-active="market"] .seam {
-  transform: translate(6%, -6%);
-}
-
-.choose-prompt {
-  position: absolute;
-  bottom: 22px;
-  left: 50%;
-  z-index: 12;
-  transform: translateX(-50%);
-  margin: 0;
-  padding: 8px 16px;
-  border: 1px solid rgba(244, 241, 234, 0.12);
-  border-radius: 999px;
-  background: rgba(7, 9, 13, 0.55);
-  backdrop-filter: blur(10px);
-  color: var(--ink-quiet);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.2em;
+.connector__brand span {
+  color: rgba(235, 240, 255, 0.48);
+  font-size: clamp(0.49rem, 0.48vw, 0.58rem);
+  font-weight: 800;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
-  pointer-events: none;
-  transition: opacity 0.35s ease;
-}
-.stage[data-active="jobs"] .choose-prompt,
-.stage[data-active="market"] .choose-prompt {
-  opacity: 0;
+  white-space: nowrap;
 }
 
-/* ── Cursor hint ── */
+.choice-cue {
+  position: absolute;
+  bottom: max(18px, env(safe-area-inset-bottom));
+  left: 50%;
+  z-index: 18;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: rgba(235, 240, 255, 0.38);
+  pointer-events: none;
+  transform: translateX(-50%);
+  transition: opacity 320ms ease, transform 500ms var(--ease-out);
+}
+
+.experience[data-active="careers"] .choice-cue,
+.experience[data-active="marketplace"] .choice-cue {
+  opacity: 0;
+  transform: translate(-50%, 8px);
+}
+
+.choice-cue__line {
+  width: 34px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.34));
+}
+
+.choice-cue__line:last-child {
+  transform: rotate(180deg);
+}
+
+.choice-cue__text {
+  font-size: 0.61rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
 .cursor-hint {
   position: fixed;
-  z-index: 50;
   top: 0;
   left: 0;
-  padding: 10px 14px;
+  z-index: 80;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 13px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 999px;
-  background: rgba(10, 12, 16, 0.88);
-  border: 1px solid rgba(244, 241, 234, 0.18);
-  color: var(--ink);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  color: rgba(247, 248, 255, 0.9);
+  background: rgba(5, 7, 16, 0.76);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
   pointer-events: none;
-  white-space: nowrap;
   opacity: 0;
-  transition: opacity 0.2s ease, border-color 0.2s ease, color 0.2s ease;
-  backdrop-filter: blur(8px);
+  transform: translate(18px, -12px) scale(0.9);
+  transition: opacity 180ms ease, transform 260ms var(--ease-out), border-color 200ms ease;
   will-change: left, top;
 }
-.cursor-hint.is-visible { opacity: 1; }
-.cursor-hint[data-side="jobs"] {
-  border-color: color-mix(in srgb, var(--jobs-accent) 55%, transparent);
-  color: var(--jobs-accent);
-}
-.cursor-hint[data-side="market"] {
-  border-color: color-mix(in srgb, var(--market-accent) 55%, transparent);
-  color: var(--market-accent);
+
+.cursor-hint.is-visible {
+  opacity: 1;
+  transform: translate(18px, -12px) scale(1);
 }
 
-/* ── Mobile: stacked halves + horizontal seam ── */
+.cursor-hint[data-portal="careers"] {
+  border-color: rgba(34, 211, 238, 0.38);
+}
+
+.cursor-hint[data-portal="marketplace"] {
+  border-color: rgba(168, 85, 247, 0.42);
+}
+
+.cursor-hint__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--careers);
+  box-shadow: 0 0 14px var(--careers);
+}
+
+.cursor-hint[data-portal="marketplace"] .cursor-hint__dot {
+  background: #c176ff;
+  box-shadow: 0 0 14px #c176ff;
+}
+
+.cursor-hint__text {
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+@keyframes caret-blink {
+  0%, 46% { opacity: 1; }
+  47%, 100% { opacity: 0; }
+}
+
+@keyframes status-pulse {
+  0%, 100% { transform: scale(0.9); opacity: 0.72; }
+  50% { transform: scale(1.08); opacity: 1; }
+}
+
+@keyframes map-breathe {
+  0%, 100% { opacity: 0.35; transform: translate(-50%, -50%) scale(0.97); }
+  50% { opacity: 0.82; transform: translate(-50%, -50%) scale(1.035); }
+}
+
+@keyframes progress-breathe {
+  0%, 100% { width: 58%; opacity: 0.72; }
+  50% { width: 82%; opacity: 1; }
+}
+
+@keyframes card-float {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -7px, 0); }
+}
+
+@keyframes circuit-flow {
+  to { stroke-dashoffset: -80; }
+}
+
+@keyframes connector-travel {
+  from { stroke-dashoffset: 100; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes node-ripple {
+  0% { width: 10px; height: 10px; opacity: 0.7; }
+  100% { width: 48px; height: 48px; opacity: 0; }
+}
+
+@keyframes core-rotate {
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes core-rotate-reverse {
+  to { transform: translate(-50%, -50%) rotate(-360deg); }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  body {
+    cursor: none;
+  }
+
+  .portal:hover .portal__surface::before {
+    opacity: 0.72;
+  }
+}
+
+@media (max-width: 1180px) {
+  .portal__title {
+    font-size: clamp(2.5rem, 5vw, 4.7rem);
+  }
+
+  .portal__content {
+    width: 44vw;
+  }
+
+  .portal__preview {
+    opacity: 0.4;
+  }
+
+  .portal__audience {
+    display: none;
+  }
+}
+
+@media (max-height: 760px) and (min-width: 769px) {
+  .experience {
+    min-height: 580px;
+  }
+
+  .portal__content--careers {
+    top: 88px;
+  }
+
+  .portal__content--marketplace {
+    bottom: 46px;
+  }
+
+  .portal__eyebrow {
+    margin-bottom: 14px;
+  }
+
+  .portal__title {
+    font-size: clamp(2.25rem, 4.6vw, 4.25rem);
+  }
+
+  .portal__subtitle {
+    min-height: 4.1em;
+    margin-top: 12px;
+    font-size: 0.84rem;
+  }
+
+  .portal__benefits {
+    margin-top: 16px;
+  }
+
+  .portal__footer {
+    margin-top: 18px;
+  }
+
+  .portal__preview {
+    display: none;
+  }
+}
+
 @media (max-width: 768px) {
   body {
-    overflow: auto;
     cursor: auto;
   }
 
-  .stage {
-    height: auto;
-    min-height: 100svh;
-    display: flex;
-    flex-direction: column;
+  .experience {
+    min-height: 680px;
+    --careers-clip: polygon(0 0, 100% 0, 0 100%);
+    --market-clip: polygon(100% 0, 100% 100%, 0 100%);
   }
 
-  .wedge {
-    position: relative;
-    inset: auto;
-    clip-path: none !important;
-    filter: none !important;
-    opacity: 1 !important;
-    min-height: 52svh;
-    flex: 1 1 auto;
-    justify-content: center !important;
-    align-items: center !important;
+  .experience[data-active="careers"],
+  .experience[data-active="marketplace"] {
+    --careers-clip: polygon(0 0, 100% 0, 0 100%);
+    --market-clip: polygon(100% 0, 100% 100%, 0 100%);
+    --connector-shift-x: 0%;
+    --connector-shift-y: 0%;
   }
 
-  .wedge.jobs,
-  .wedge.market {
-    clip-path: none;
+  .experience__pointer-glow,
+  .cursor-hint,
+  .choice-cue,
+  .portal__preview,
+  .signal-map {
+    display: none !important;
   }
 
-  .wedge-inner {
-    max-width: 100%;
-    width: 100%;
-    text-align: left !important;
-    align-items: flex-start !important;
-    padding: 40px 24px 48px !important;
+  .masthead {
+    top: max(12px, env(safe-area-inset-top));
+    width: 190px;
   }
 
-  .wedge.market .product-label {
-    flex-direction: row;
+  .masthead__brand {
+    width: 104px;
+    height: 38px;
   }
 
-  .wedge.market .benefits {
-    align-items: flex-start;
+  .masthead__meta {
+    display: none;
   }
 
-  .wedge.market .benefits li {
-    padding-left: 14px;
-    padding-right: 0;
+  .portal__content {
+    width: 55vw;
   }
 
-  .wedge.market .benefits li::before {
-    left: 0;
-    right: auto;
+  .portal__content--careers {
+    top: clamp(74px, 10vh, 92px);
+    left: 18px;
   }
 
-  .wedge.market .cta {
-    flex-direction: row;
+  .portal__content--marketplace {
+    right: 18px;
+    bottom: max(18px, env(safe-area-inset-bottom));
   }
 
-  .type-title {
-    font-size: clamp(2.1rem, 9vw, 3rem);
-    min-height: 2.3em;
+  .portal__eyebrow {
+    gap: 7px;
+    margin-bottom: 13px;
+    font-size: 0.57rem;
+    letter-spacing: 0.12em;
   }
 
-  .type-subtitle {
-    min-height: 3.6em;
-    max-width: 100%;
-  }
-
-  .seam {
-    position: relative;
-    inset: auto;
-    height: 72px;
-    flex: 0 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(
-      90deg,
-      color-mix(in srgb, var(--jobs-accent) 35%, transparent),
-      rgba(232, 228, 220, 0.55),
-      color-mix(in srgb, var(--market-accent) 35%, transparent)
-    );
-    transform: none !important;
-  }
-
-  .seam-svg { display: none; }
-
-  .brand-hinge {
-    position: relative;
-    top: auto;
-    left: auto;
-    transform: none;
-    flex-direction: row;
-    gap: 12px;
-    padding: 8px 18px;
-    border-radius: 999px;
-    background: rgba(7, 9, 13, 0.82);
-    border: 1px solid rgba(244, 241, 234, 0.14);
-    animation: none;
-  }
-
-  .brand-hinge img {
-    width: 40px;
-    animation: none;
+  .portal__icon {
+    width: 30px;
+    height: 30px;
     border-radius: 10px;
   }
 
-  .choose-prompt { display: none; }
+  .portal__icon svg {
+    width: 16px;
+    height: 16px;
+  }
 
-  .stage[data-active="jobs"] .wedge.jobs .cta,
-  .stage[data-active="market"] .wedge.market .cta {
-    transform: none;
+  .portal__category {
+    display: none;
+  }
+
+  .portal__title {
+    max-width: 10.5ch;
+    min-height: 3em;
+    font-size: clamp(2rem, 9.5vw, 3.25rem);
+    line-height: 0.98;
+  }
+
+  .portal__subtitle {
+    min-height: 5.6em;
+    margin-top: 12px;
+    font-size: clamp(0.69rem, 2.7vw, 0.84rem);
+    line-height: 1.5;
+  }
+
+  .portal__benefits {
+    gap: 6px;
+    margin-top: 12px;
+  }
+
+  .portal__benefits span {
+    display: none;
+    padding: 7px 9px;
+    font-size: 0.58rem;
+  }
+
+  .portal__benefits span:first-child {
+    display: inline-flex;
+  }
+
+  .portal__footer {
+    margin-top: 14px;
+  }
+
+  .portal__audience {
+    display: none;
+  }
+
+  .portal__cta {
+    gap: 8px;
+    font-size: 0.61rem;
+    letter-spacing: 0.07em;
+  }
+
+  .portal__cta-icon {
+    width: 35px;
+    height: 35px;
+  }
+
+  .connector__aura {
+    stroke-width: 11;
+  }
+
+  .connector__line {
+    stroke-width: 1.2;
+  }
+
+  .connector__circuit {
+    stroke-width: 0.5;
+  }
+
+  .connector__pulse {
+    stroke-width: 3.4;
+  }
+
+  .connector__core {
+    width: 88px;
+  }
+
+  .connector__brand {
+    width: 78%;
+    gap: 0;
+    padding: 8px;
+    border-radius: 12px;
+  }
+
+  .connector__brand span,
+  .connector__node {
+    display: none;
+  }
+}
+
+@media (max-width: 430px) {
+  .experience {
+    min-height: 620px;
+  }
+
+  .portal__content {
+    width: 57vw;
+  }
+
+  .portal__content--careers {
+    top: 64px;
+    left: 14px;
+  }
+
+  .portal__content--marketplace {
+    right: 14px;
+    bottom: 12px;
+  }
+
+  .portal__title {
+    font-size: clamp(1.8rem, 9.1vw, 2.55rem);
+  }
+
+  .portal__subtitle {
+    font-size: 0.66rem;
+  }
+
+  .portal__benefits {
+    display: none;
+  }
+
+  .portal__footer {
+    margin-top: 10px;
+  }
+
+  .connector__core {
+    width: 76px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  .caret { animation: none; opacity: 1; }
-  .brand-hinge { animation: none; }
-  .brand-hinge img { animation: none; }
-  body { cursor: auto; }
-  .cursor-hint { display: none !important; }
+
+  body {
+    cursor: auto;
+  }
+
+  .cursor-hint,
+  .experience__pointer-glow {
+    display: none !important;
+  }
+
+  .typewriter__caret {
+    animation: none;
+    opacity: 0.75;
+  }
 }

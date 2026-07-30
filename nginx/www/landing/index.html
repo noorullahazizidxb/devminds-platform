@@ -2,123 +2,248 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#0a0c10" />
-  <meta name="description" content="DevMinds — choose Kaaryabi for careers or Marketplace for buy, sell, and rent across Afghanistan." />
-  <meta property="og:title" content="DevMinds | Choose Your Portal" />
-  <meta property="og:description" content="Two platforms. One ecosystem. Pick careers or marketplace — and move forward." />
-  <meta property="og:image" content="/assets/devminds-mark.png" />
-  <title>DevMinds | Choose Your Portal</title>
-  <link rel="icon" href="/assets/devminds-mark.png" type="image/png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#060816" />
+  <meta name="description" content="Choose your DevMinds experience: Kaaryabi for careers and hiring, or Marketplace for buying, selling, and renting." />
+  <meta property="og:title" content="DevMinds — Choose your next move" />
+  <meta property="og:description" content="Two focused platforms. One connected digital ecosystem." />
+  <meta property="og:image" content="./assets/logo.png" />
+  <title>DevMinds — Choose your next move</title>
+  <link rel="icon" href="./assets/devminds-mark.png" type="image/png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
-  <div class="grain" aria-hidden="true"></div>
+  <a class="skip-link" href="#portal-choice">Skip to portal selection</a>
 
-  <div class="stage" data-active="none" id="stage">
-    <!-- Kaaryabi / Jobs — upper-left wedge -->
+  <main class="experience" id="portal-choice" data-active="neutral">
+    <div class="experience__noise" aria-hidden="true"></div>
+    <div class="experience__pointer-glow" aria-hidden="true"></div>
+
+    <header class="masthead" aria-label="DevMinds ecosystem">
+      <div class="masthead__brand">
+        <img src="./assets/logo.png" alt="DevMinds" width="791" height="369" />
+      </div>
+      <p class="masthead__meta">
+        <span class="masthead__status" aria-hidden="true"></span>
+        Two products. One connected ecosystem.
+      </p>
+    </header>
+
     <a
-      class="wedge jobs"
-      id="wedge-jobs"
+      class="portal portal--careers"
+      id="portal-careers"
       href="https://jobs.devminds.net"
-      data-side="jobs"
-      aria-label="Enter Kaaryabi — find jobs and hire talent"
+      data-portal="careers"
+      aria-label="Open Kaaryabi for jobs, professional growth, and hiring"
     >
-      <div class="wedge-atmosphere" aria-hidden="true"></div>
-      <div class="wedge-inner">
-        <p class="product-label">
-          <span class="label-mark" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none"><path d="M8 7V5.5A2.5 2.5 0 0 1 10.5 3h3A2.5 2.5 0 0 1 16 5.5V7M3 10h18v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-9Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 13c5.5 2.5 12.5 2.5 18 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <div class="portal__surface" aria-hidden="true">
+        <div class="portal__grid"></div>
+        <div class="portal__orb portal__orb--one"></div>
+        <div class="portal__orb portal__orb--two"></div>
+        <div class="signal-map signal-map--careers">
+          <span class="signal-map__ring signal-map__ring--one"></span>
+          <span class="signal-map__ring signal-map__ring--two"></span>
+          <span class="signal-map__ring signal-map__ring--three"></span>
+          <span class="signal-map__node signal-map__node--one"></span>
+          <span class="signal-map__node signal-map__node--two"></span>
+          <span class="signal-map__node signal-map__node--three"></span>
+        </div>
+      </div>
+
+      <section class="portal__content portal__content--careers">
+        <div class="portal__eyebrow">
+          <span class="portal__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M8 7V5.5A2.5 2.5 0 0 1 10.5 3h3A2.5 2.5 0 0 1 16 5.5V7" />
+              <path d="M4 8.5h16a2 2 0 0 1 2 2V19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-8.5a2 2 0 0 1 2-2Z" />
+              <path d="M2 13c5.7 2.8 14.3 2.8 20 0" />
+            </svg>
           </span>
-          Kaaryabi
-        </p>
-        <h1 class="type-title" data-typewriter="jobs-title" aria-live="polite">
-          <span class="type-text"></span><span class="caret" aria-hidden="true"></span>
-        </h1>
-        <p class="type-subtitle" data-typewriter="jobs-sub">
-          <span class="type-text"></span><span class="caret" aria-hidden="true"></span>
-        </p>
-        <ul class="benefits" aria-label="Kaaryabi benefits">
-          <li>Dual-sided hiring for seekers &amp; companies</li>
-          <li>Fresh roles and verified company profiles</li>
-          <li>Track applications in one place</li>
-        </ul>
-        <span class="cta">
-          Enter Kaaryabi
-          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11M11 5l5 5-5 5" /></svg>
-        </span>
+          <span>Kaaryabi</span>
+          <span class="portal__category">Careers &amp; hiring</span>
+        </div>
+
+        <div class="portal__type-block">
+          <h1 class="portal__title">
+            <span class="sr-only">Find work that moves your life forward.</span>
+            <span class="typewriter" data-typewriter="careers-title" aria-hidden="true">
+              <span class="typewriter__text"></span><span class="typewriter__caret"></span>
+            </span>
+          </h1>
+          <p class="portal__subtitle">
+            <span class="sr-only">Discover relevant roles, present your strengths, and manage each application from one focused workspace.</span>
+            <span class="typewriter" data-typewriter="careers-subtitle" aria-hidden="true">
+              <span class="typewriter__text"></span><span class="typewriter__caret"></span>
+            </span>
+          </p>
+        </div>
+
+        <div class="portal__benefits" aria-label="Kaaryabi benefits">
+          <span><strong>Discover</strong> relevant opportunities</span>
+          <span><strong>Connect</strong> with credible teams</span>
+          <span><strong>Track</strong> every application</span>
+        </div>
+
+        <div class="portal__footer">
+          <span class="portal__audience">For talent, employers &amp; recruiters</span>
+          <span class="portal__cta">
+            Enter Kaaryabi
+            <span class="portal__cta-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h13M13 6l6 6-6 6" /></svg>
+            </span>
+          </span>
+        </div>
+      </section>
+
+      <div class="portal__preview portal__preview--careers" aria-hidden="true">
+        <div class="preview-card preview-card--primary">
+          <span class="preview-card__label">Opportunity flow</span>
+          <strong>Search → Apply → Track</strong>
+          <div class="preview-card__progress"><span></span></div>
+        </div>
+        <div class="preview-card preview-card--floating">
+          <span class="preview-card__dot"></span>
+          Fresh roles
+        </div>
       </div>
     </a>
 
-    <!-- Marketplace — lower-right wedge -->
     <a
-      class="wedge market"
-      id="wedge-market"
+      class="portal portal--marketplace"
+      id="portal-marketplace"
       href="https://marketplace.devminds.com"
-      data-side="market"
-      aria-label="Enter Marketplace — buy, sell, and rent"
+      data-portal="marketplace"
+      aria-label="Open DevMinds Marketplace to buy, sell, and rent"
     >
-      <div class="wedge-atmosphere" aria-hidden="true"></div>
-      <div class="wedge-inner">
-        <p class="product-label">
-          <span class="label-mark" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none"><path d="M4 11 12 4l8 7M7 10v9h10v-9M14 5h4v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div class="portal__surface" aria-hidden="true">
+        <div class="portal__grid"></div>
+        <div class="portal__orb portal__orb--one"></div>
+        <div class="portal__orb portal__orb--two"></div>
+        <div class="signal-map signal-map--marketplace">
+          <span class="signal-map__ring signal-map__ring--one"></span>
+          <span class="signal-map__ring signal-map__ring--two"></span>
+          <span class="signal-map__ring signal-map__ring--three"></span>
+          <span class="signal-map__node signal-map__node--one"></span>
+          <span class="signal-map__node signal-map__node--two"></span>
+          <span class="signal-map__node signal-map__node--three"></span>
+        </div>
+      </div>
+
+      <section class="portal__content portal__content--marketplace">
+        <div class="portal__eyebrow">
+          <span class="portal__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="m4 10 8-6 8 6" />
+              <path d="M6.5 9v10.5h11V9" />
+              <path d="M9 19.5v-6h6v6" />
+              <path d="M15.5 5.5H19V9" />
+            </svg>
           </span>
-          Marketplace
-        </p>
-        <h1 class="type-title" data-typewriter="market-title" aria-live="polite">
-          <span class="type-text"></span><span class="caret" aria-hidden="true"></span>
-        </h1>
-        <p class="type-subtitle" data-typewriter="market-sub">
-          <span class="type-text"></span><span class="caret" aria-hidden="true"></span>
-        </p>
-        <ul class="benefits" aria-label="Marketplace benefits">
-          <li>Buy, sell, or rent in one trusted place</li>
-          <li>Connect with sellers faster</li>
-          <li>Circular access — use what you need</li>
-        </ul>
-        <span class="cta">
-          Enter Marketplace
-          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11M11 5l5 5-5 5" /></svg>
-        </span>
+          <span>Marketplace</span>
+          <span class="portal__category">Buy, sell &amp; rent</span>
+        </div>
+
+        <div class="portal__type-block">
+          <h1 class="portal__title">
+            <span class="sr-only">Find it. List it. Move it.</span>
+            <span class="typewriter" data-typewriter="marketplace-title" aria-hidden="true">
+              <span class="typewriter__text"></span><span class="typewriter__caret"></span>
+            </span>
+          </h1>
+          <p class="portal__subtitle">
+            <span class="sr-only">Buy, sell, and rent useful products through a faster, more human local marketplace.</span>
+            <span class="typewriter" data-typewriter="marketplace-subtitle" aria-hidden="true">
+              <span class="typewriter__text"></span><span class="typewriter__caret"></span>
+            </span>
+          </p>
+        </div>
+
+        <div class="portal__benefits" aria-label="Marketplace benefits">
+          <span><strong>Browse</strong> fresh local listings</span>
+          <span><strong>Reach</strong> real buyers faster</span>
+          <span><strong>Access</strong> through buying or renting</span>
+        </div>
+
+        <div class="portal__footer">
+          <span class="portal__audience">For buyers, sellers &amp; everyday owners</span>
+          <span class="portal__cta">
+            Enter Marketplace
+            <span class="portal__cta-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h13M13 6l6 6-6 6" /></svg>
+            </span>
+          </span>
+        </div>
+      </section>
+
+      <div class="portal__preview portal__preview--marketplace" aria-hidden="true">
+        <div class="preview-card preview-card--primary">
+          <span class="preview-card__label">Value in motion</span>
+          <strong>List → Connect → Exchange</strong>
+          <div class="preview-card__progress"><span></span></div>
+        </div>
+        <div class="preview-card preview-card--floating">
+          <span class="preview-card__dot"></span>
+          New listings
+        </div>
       </div>
     </a>
 
-    <!-- Diagonal seam + DevMinds brand hinge -->
-    <div class="seam" aria-hidden="true">
-      <svg class="seam-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+    <div class="connector" aria-hidden="true">
+      <svg class="connector__svg" viewBox="0 0 100 100" preserveAspectRatio="none">
         <defs>
-          <linearGradient id="seamGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#f0a35a" />
-            <stop offset="50%" stop-color="#e8e4dc" />
-            <stop offset="100%" stop-color="#2dd4bf" />
+          <linearGradient id="connector-gradient" x1="100%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#a855f7" />
+            <stop offset="48%" stop-color="#f7f8ff" />
+            <stop offset="52%" stop-color="#c8f5ff" />
+            <stop offset="100%" stop-color="#22d3ee" />
           </linearGradient>
-          <linearGradient id="seamGlow" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#f0a35a" stop-opacity="0" />
-            <stop offset="40%" stop-color="#f0a35a" stop-opacity=".9" />
-            <stop offset="60%" stop-color="#2dd4bf" stop-opacity=".9" />
-            <stop offset="100%" stop-color="#2dd4bf" stop-opacity="0" />
+          <linearGradient id="connector-pulse" x1="100%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#a855f7" stop-opacity="0" />
+            <stop offset="28%" stop-color="#a855f7" stop-opacity="1" />
+            <stop offset="50%" stop-color="#ffffff" stop-opacity="1" />
+            <stop offset="72%" stop-color="#22d3ee" stop-opacity="1" />
+            <stop offset="100%" stop-color="#22d3ee" stop-opacity="0" />
           </linearGradient>
+          <filter id="connector-glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="0.8" result="blur" />
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
         </defs>
-        <!-- Diagonal from top-right (100,0) to bottom-left (0,100) -->
-        <line class="seam-base" x1="100" y1="0" x2="0" y2="100" />
-        <line class="seam-dash" x1="100" y1="0" x2="0" y2="100" />
-        <line class="seam-travel" x1="100" y1="0" x2="0" y2="100" />
+        <line class="connector__aura" x1="100" y1="0" x2="0" y2="100" />
+        <line class="connector__line" x1="100" y1="0" x2="0" y2="100" />
+        <line class="connector__circuit" x1="100" y1="0" x2="0" y2="100" />
+        <line class="connector__pulse connector__pulse--one" x1="100" y1="0" x2="0" y2="100" />
+        <line class="connector__pulse connector__pulse--two" x1="100" y1="0" x2="0" y2="100" />
       </svg>
-      <div class="brand-hinge">
-        <img src="/assets/devminds-mark.png" width="96" height="96" alt="" />
-        <span class="brand-name">DevMinds</span>
+
+      <span class="connector__node connector__node--north"></span>
+      <span class="connector__node connector__node--south"></span>
+
+      <div class="connector__core">
+        <span class="connector__core-ring connector__core-ring--one"></span>
+        <span class="connector__core-ring connector__core-ring--two"></span>
+        <div class="connector__brand">
+          <img src="./assets/logo.png" alt="" width="791" height="369" />
+          <span>Choose your next move</span>
+        </div>
       </div>
     </div>
 
-    <p class="choose-prompt" id="choose-prompt">Choose a portal</p>
+    <div class="choice-cue" aria-hidden="true">
+      <span class="choice-cue__line"></span>
+      <span class="choice-cue__text">Hover, focus, or tap a world</span>
+      <span class="choice-cue__line"></span>
+    </div>
+  </main>
+
+  <div class="cursor-hint" id="cursor-hint" hidden aria-hidden="true">
+    <span class="cursor-hint__dot"></span>
+    <span class="cursor-hint__text"></span>
   </div>
 
-  <div class="cursor-hint" id="cursor-hint" hidden aria-hidden="true"></div>
-
-  <script src="/app.js" defer></script>
+  <script src="./app.js" defer></script>
 </body>
 </html>
