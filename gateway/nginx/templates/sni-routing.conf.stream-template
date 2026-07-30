@@ -3,6 +3,11 @@ log_format basic '$remote_addr [$time_local] $protocol $status $bytes_sent $byte
 
 access_log /var/log/nginx/stream-access.log basic;
 
+# Docker embedded DNS — required because proxy_pass uses a variable ($https_upstream).
+# Without this, SNI routing cannot resolve container hostnames and clients see
+# "Connection reset by peer" on :443 while HTTP (literal proxy_pass) still works.
+resolver 127.0.0.11 valid=10s ipv6=off;
+
 map $ssl_preread_server_name $https_upstream {
     ticket.newlinkaf.com              ${NEWLINKAF_HTTPS_UPSTREAM};
 
@@ -10,7 +15,6 @@ map $ssl_preread_server_name $https_upstream {
     www.devminds.net                  ${DEVMINDS_HTTPS_UPSTREAM};
     jobs.devminds.net                 ${DEVMINDS_HTTPS_UPSTREAM};
     marketplace.devminds.net          ${DEVMINDS_HTTPS_UPSTREAM};
-    marketplace.devminds.com          ${DEVMINDS_HTTPS_UPSTREAM};
 
     default                           ${DEVMINDS_HTTPS_UPSTREAM};
 }

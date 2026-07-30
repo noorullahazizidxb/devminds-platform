@@ -169,7 +169,7 @@ sudo certbot certonly --webroot \
   -w "$(pwd)/nginx/www/certbot" \
   -d devminds.net -d www.devminds.net \
   -d jobs.devminds.net \
-  -d marketplace.devminds.net -d marketplace.devminds.com \
+  -d marketplace.devminds.net \
   --email admin@devminds.net --agree-tos --no-eff-email
 ```
 
@@ -182,7 +182,7 @@ cd ~/projects/devminds-platform/gateway && docker compose stop gateway-nginx
 sudo certbot certonly --standalone \
   -d devminds.net -d www.devminds.net \
   -d jobs.devminds.net \
-  -d marketplace.devminds.net -d marketplace.devminds.com \
+  -d marketplace.devminds.net \
   --email admin@devminds.net --agree-tos --no-eff-email
 cd ~/projects/devminds-platform/gateway && docker compose start gateway-nginx
 ```

@@ -32,8 +32,7 @@ server {
         devminds.net
         www.devminds.net
         jobs.devminds.net
-        marketplace.devminds.net
-        marketplace.devminds.com;
+        marketplace.devminds.net;
 
     location / {
         proxy_pass http://${DEVMINDS_HTTP_UPSTREAM};

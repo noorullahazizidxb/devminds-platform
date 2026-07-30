@@ -10,11 +10,11 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-ARG NEXT_PUBLIC_API_BASE=https://marketplace.devminds.com/api
-ARG NEXT_PUBLIC_API_BASE_URL=https://marketplace.devminds.com/api
-ARG NEXT_PUBLIC_WS_URL=https://marketplace.devminds.com
-ARG NEXT_PUBLIC_SOCKET_URL=https://marketplace.devminds.com
-ARG NEXT_PUBLIC_SITE_URL=https://marketplace.devminds.com
+ARG NEXT_PUBLIC_API_BASE=https://marketplace.devminds.net/api
+ARG NEXT_PUBLIC_API_BASE_URL=https://marketplace.devminds.net/api
+ARG NEXT_PUBLIC_WS_URL=https://marketplace.devminds.net
+ARG NEXT_PUBLIC_SOCKET_URL=https://marketplace.devminds.net
+ARG NEXT_PUBLIC_SITE_URL=https://marketplace.devminds.net
 ARG API_BASE=http://marketplace-backend:4000/api
 ARG NEXT_PUBLIC_ENABLE_ELASTIC_SEARCH=true
 ENV NEXT_PUBLIC_API_BASE=$NEXT_PUBLIC_API_BASE

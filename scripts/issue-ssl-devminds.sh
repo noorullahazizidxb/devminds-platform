@@ -23,8 +23,8 @@ sudo certbot certonly --webroot \
   -w "$WEBROOT" \
   -d devminds.net -d www.devminds.net \
   -d jobs.devminds.net \
-  -d marketplace.devminds.net -d marketplace.devminds.com \
-  --email "$EMAIL" --agree-tos --no-eff-email --non-interactive
+  -d marketplace.devminds.net \
+  --email "$EMAIL" --agree-tos --no-eff-email --non-interactive --expand --cert-name devminds.net
 
 if [[ ! -f "${LIVE_DIR}/fullchain.pem" || ! -f "${LIVE_DIR}/privkey.pem" ]]; then
   echo "ERROR: expected certs missing under ${LIVE_DIR}" >&2

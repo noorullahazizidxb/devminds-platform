@@ -11,7 +11,7 @@ edge-gateway-nginx  (:80 / :443)     ← gateway/docker-compose.yml
    ├── Host: ticket.newlinkaf.com
    │         → newlinkaf-nginx:80 (HTTP) / :443 (HTTPS SNI)
    │
-   └── Host: *.devminds.net / marketplace.devminds.com
+   └── Host: *.devminds.net
              → devminds-internal-nginx:80 (HTTP) / :443 (HTTPS SNI)
 ```
 
@@ -110,6 +110,7 @@ Common causes:
 - **Stale container name** — remove the old container: `docker rm -f edge-gateway-nginx`
 - **Wrong Compose project** — `unset COMPOSE_PROJECT_NAME` and always use `--project-name edge-gateway`
 - **504 Gateway Time-out** — edge cannot reach upstream; confirm both app nginx containers are on `public-proxy` (`docker network inspect public-proxy`)
+- **HTTPS `Connection reset by peer` while HTTP works** — stream SNI uses `proxy_pass $variable`, which needs Docker DNS: `resolver 127.0.0.11` in the stream template. Recreate the gateway after pulling that fix.
 
 ## 4. Verify routing
 

@@ -18,7 +18,10 @@ echo "==> DevMinds HTTPS"
 curl -skI --max-time 15 https://jobs.devminds.net/health | head -n 8 || true
 
 echo "==> Marketplace HTTPS"
-curl -skI --max-time 15 https://marketplace.devminds.com/ | head -n 8 || true
+curl -skI --max-time 15 https://marketplace.devminds.net/ | head -n 8 || true
+
+echo "==> NewLinkAF via edge (HTTP)"
+curl -sI -H 'Host: ticket.newlinkaf.com' --max-time 10 http://127.0.0.1/ | head -n 5 || true
 
 echo "==> Landing HTTPS"
 curl -skI --max-time 15 https://devminds.net/ | head -n 8 || true

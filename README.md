@@ -165,7 +165,7 @@ openssl req -x509 -nodes -newkey rsa:2048 -days 825 `
   -keyout nginx/certs/privkey.pem `
   -out nginx/certs/fullchain.pem `
   -subj "/CN=devminds.net" `
-  -addext "subjectAltName=DNS:devminds.net,DNS:www.devminds.net,DNS:jobs.devminds.net,DNS:marketplace.devminds.net,DNS:marketplace.devminds.com"
+  -addext "subjectAltName=DNS:devminds.net,DNS:www.devminds.net,DNS:jobs.devminds.net,DNS:marketplace.devminds.net"
 ```
 
 Replace with Let’s Encrypt for production; keep the same filenames. See [docs/DEPLOY-VPS.md](docs/DEPLOY-VPS.md).

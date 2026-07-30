@@ -234,11 +234,11 @@ services:
       context: ../MarketPlace_Back_end_Front_End/marketplace-Front-end
       dockerfile: ../../devminds-platform/dockerfiles/marketplace-frontend.Dockerfile
       args:
-        NEXT_PUBLIC_API_BASE: ${NEXT_PUBLIC_MARKETPLACE_API_BASE:-https://marketplace.devminds.com/api}
-        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_MARKETPLACE_API_BASE:-https://marketplace.devminds.com/api}
-        NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_MARKETPLACE_WS_URL:-https://marketplace.devminds.com}
-        NEXT_PUBLIC_SOCKET_URL: ${NEXT_PUBLIC_MARKETPLACE_WS_URL:-https://marketplace.devminds.com}
-        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_MARKETPLACE_SITE_URL:-https://marketplace.devminds.com}
+        NEXT_PUBLIC_API_BASE: ${NEXT_PUBLIC_MARKETPLACE_API_BASE:-https://marketplace.devminds.net/api}
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_MARKETPLACE_API_BASE:-https://marketplace.devminds.net/api}
+        NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_MARKETPLACE_WS_URL:-https://marketplace.devminds.net}
+        NEXT_PUBLIC_SOCKET_URL: ${NEXT_PUBLIC_MARKETPLACE_WS_URL:-https://marketplace.devminds.net}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_MARKETPLACE_SITE_URL:-https://marketplace.devminds.net}
         API_BASE: http://marketplace-backend:4000/api
         NEXT_PUBLIC_ENABLE_ELASTIC_SEARCH: ${NEXT_PUBLIC_ENABLE_ELASTIC_SEARCH:-true}
     container_name: devminds-marketplace-frontend
@@ -249,11 +249,11 @@ services:
       NODE_ENV: production
       PORT: 3000
       HOSTNAME: 0.0.0.0
-      NEXT_PUBLIC_API_BASE: ${NEXT_PUBLIC_MARKETPLACE_API_BASE:-https://marketplace.devminds.com/api}
-      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_MARKETPLACE_API_BASE:-https://marketplace.devminds.com/api}
-      NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_MARKETPLACE_WS_URL:-https://marketplace.devminds.com}
-      NEXT_PUBLIC_SOCKET_URL: ${NEXT_PUBLIC_MARKETPLACE_WS_URL:-https://marketplace.devminds.com}
-      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_MARKETPLACE_SITE_URL:-https://marketplace.devminds.com}
+      NEXT_PUBLIC_API_BASE: ${NEXT_PUBLIC_MARKETPLACE_API_BASE:-https://marketplace.devminds.net/api}
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_MARKETPLACE_API_BASE:-https://marketplace.devminds.net/api}
+      NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_MARKETPLACE_WS_URL:-https://marketplace.devminds.net}
+      NEXT_PUBLIC_SOCKET_URL: ${NEXT_PUBLIC_MARKETPLACE_WS_URL:-https://marketplace.devminds.net}
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_MARKETPLACE_SITE_URL:-https://marketplace.devminds.net}
       API_BASE: http://marketplace-backend:4000/api
       NEXT_PUBLIC_ENABLE_ELASTIC_SEARCH: ${NEXT_PUBLIC_ENABLE_ELASTIC_SEARCH:-true}
     depends_on:
