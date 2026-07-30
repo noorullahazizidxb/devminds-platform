@@ -1,0 +1,8 @@
+# Force LF for shell/env files so Linux VPS deploy never sees Windows \r
+*.sh text eol=lf
+.env text eol=lf
+.env.* text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+Dockerfile text eol=lf
+*.Dockerfile text eol=lf

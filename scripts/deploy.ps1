@@ -10,7 +10,8 @@ Set-Location $root
 
 $source = if ($Env -eq "production") {
   ".env.production"
-} else {
+}
+else {
   ".env.local"
 }
 
@@ -19,13 +20,17 @@ if (-not (Test-Path $source)) {
 }
 
 Write-Host "==> Using $source -> .env ($Env)"
-Copy-Item -Path $source -Destination ".env" -Force
+# Always write LF so Linux hosts never see COMPOSE_PROJECT_NAME=...\r
+$text = [System.IO.File]::ReadAllText((Resolve-Path $source).Path) -replace "`r`n", "`n" -replace "`r", "`n"
+$utf8NoBom = New-Object System.Text.UTF8Encoding $false
+[System.IO.File]::WriteAllText((Join-Path $root ".env"), $text, $utf8NoBom)
 
 $composeArgs = @("-f", "docker-compose.yml")
 if ($Env -eq "local") {
   $composeArgs += @("-f", "docker-compose.local.yml")
   Write-Host "==> Local mode: apps on IP:ports (no Nginx)"
-} else {
+}
+else {
   Write-Host "==> Production mode: Nginx + domains (Nginx on 127.0.0.1:8080/8443)"
 }
 
@@ -49,7 +54,8 @@ if ($Env -eq "local") {
   try {
     docker compose -f docker-compose.yml stop nginx *>$null
     docker compose -f docker-compose.yml rm -f nginx *>$null
-  } finally {
+  }
+  finally {
     $ErrorActionPreference = $prevEap
   }
 }
@@ -64,7 +70,8 @@ if ($Env -eq "local") {
   Write-Host "  Jobs API:        http://127.0.0.1:4001/health"
   Write-Host "  Marketplace API: http://127.0.0.1:4002/api/health"
   Write-Host "Change LOCAL_PUBLIC_HOST in .env.local for LAN IP access, then redeploy."
-} else {
+}
+else {
   Write-Host ""
   Write-Host "Production: DevMinds Nginx is on 127.0.0.1:8080 (HTTP) and 127.0.0.1:8443 (HTTPS)."
   Write-Host "If this VPS also hosts NewLinkAF (ticket.newlinkaf.com), start the edge gateway:"

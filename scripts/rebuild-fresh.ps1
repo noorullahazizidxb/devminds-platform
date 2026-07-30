@@ -21,7 +21,10 @@ if (-not (Test-Path $source)) {
 }
 
 Write-Host "==> Using $source → .env ($Env)"
-Copy-Item -Path $source -Destination ".env" -Force
+# Always write LF so Linux hosts never see COMPOSE_PROJECT_NAME=...\r
+$text = [System.IO.File]::ReadAllText((Resolve-Path $source).Path) -replace "`r`n", "`n" -replace "`r", "`n"
+$utf8NoBom = New-Object System.Text.UTF8Encoding $false
+[System.IO.File]::WriteAllText((Join-Path $root ".env"), $text, $utf8NoBom)
 
 $composeArgs = @("-f", "docker-compose.yml")
 if ($Env -eq "local") {
@@ -34,8 +37,8 @@ docker compose @composeArgs down --remove-orphans
 
 Write-Host "==> Removing only the DevMinds MySQL volume..."
 $mysqlVolumes = @(docker volume ls --quiet `
-  --filter "label=com.docker.compose.project=devminds-platform" `
-  --filter "label=com.docker.compose.volume=mysql-data")
+    --filter "label=com.docker.compose.project=devminds-platform" `
+    --filter "label=com.docker.compose.volume=mysql-data")
 foreach ($volume in $mysqlVolumes) {
   if ($volume) { docker volume rm $volume }
 }

@@ -24,7 +24,8 @@ if [ ! -f "$SOURCE" ]; then
 fi
 
 echo "==> Using $SOURCE → .env ($ENV_MODE)"
-cp "$SOURCE" .env
+# Strip Windows CRLF so Compose never sees values like "devminds-platform\r"
+sed $'s/\r$//' "$SOURCE" > .env
 
 COMPOSE=(docker compose -f docker-compose.yml)
 if [ "$ENV_MODE" = "local" ]; then
