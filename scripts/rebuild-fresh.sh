@@ -55,16 +55,26 @@ echo "==> Stopping the DevMinds Compose project..."
 docker compose --project-name $'devminds-platform\r' down --remove-orphans >/dev/null 2>&1 || true
 
 echo "==> Removing only the DevMinds MySQL volume..."
+# Always try the canonical Compose name first (works even if labels are missing).
 mapfile -t mysql_volumes < <({
+  echo "${PROJECT_NAME}_mysql-data"
   docker volume ls --quiet \
     --filter "label=com.docker.compose.project=${PROJECT_NAME}" \
     --filter "label=com.docker.compose.volume=mysql-data" || true
   docker volume ls --quiet | grep -E 'devminds.*mysql-data|mysql-data' | grep -i devminds || true
 } | awk 'NF && !seen[$0]++')
-for vol in "${mysql_volumes[@]:-}"; do
-  echo "    removing volume: $vol"
-  docker volume rm "$vol"
+removed_any=0
+for vol in "${mysql_volumes[@]}"; do
+  [[ -n "${vol}" ]] || continue
+  if docker volume inspect "$vol" >/dev/null 2>&1; then
+    echo "    removing volume: $vol"
+    docker volume rm "$vol"
+    removed_any=1
+  fi
 done
+if [[ "$removed_any" -eq 0 ]]; then
+  echo "    no mysql-data volume found (already removed — continuing)"
+fi
 
 echo "==> Rebuilding all application images without cache..."
 "${COMPOSE[@]}" build --no-cache
