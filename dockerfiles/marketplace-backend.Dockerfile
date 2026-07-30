@@ -12,7 +12,6 @@ WORKDIR /app
 # before npm ci. This order is required for a clean Docker build.
 COPY package.json package-lock.json ./
 COPY prisma ./prisma
-COPY vendor ./vendor
 RUN npm ci
 
 COPY . .
