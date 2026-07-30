@@ -3,74 +3,122 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#071914" />
-  <meta name="description" content="DevMinds connects ambitious people with meaningful work and trusted marketplace opportunities." />
-  <title>DevMinds | Work. Trade. Move Forward.</title>
-  <link rel="icon" href="/logo.png" type="image/png" />
+  <meta name="theme-color" content="#0a0c10" />
+  <meta name="description" content="DevMinds — choose Kaaryabi for careers or Marketplace for buy, sell, and rent across Afghanistan." />
+  <meta property="og:title" content="DevMinds | Choose Your Portal" />
+  <meta property="og:description" content="Two platforms. One ecosystem. Pick careers or marketplace — and move forward." />
+  <meta property="og:image" content="/assets/devminds-mark.png" />
+  <title>DevMinds | Choose Your Portal</title>
+  <link rel="icon" href="/assets/devminds-mark.png" type="image/png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
-  <div class="ambient" aria-hidden="true">
-    <span class="orb orb-one"></span>
-    <span class="orb orb-two"></span>
-    <span class="grid"></span>
+  <div class="grain" aria-hidden="true"></div>
+
+  <div class="stage" data-active="none" id="stage">
+    <!-- Kaaryabi / Jobs — upper-left wedge -->
+    <a
+      class="wedge jobs"
+      id="wedge-jobs"
+      href="https://jobs.devminds.net"
+      data-side="jobs"
+      aria-label="Enter Kaaryabi — find jobs and hire talent"
+    >
+      <div class="wedge-atmosphere" aria-hidden="true"></div>
+      <div class="wedge-inner">
+        <p class="product-label">
+          <span class="label-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M8 7V5.5A2.5 2.5 0 0 1 10.5 3h3A2.5 2.5 0 0 1 16 5.5V7M3 10h18v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-9Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 13c5.5 2.5 12.5 2.5 18 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </span>
+          Kaaryabi
+        </p>
+        <h1 class="type-title" data-typewriter="jobs-title" aria-live="polite">
+          <span class="type-text"></span><span class="caret" aria-hidden="true"></span>
+        </h1>
+        <p class="type-subtitle" data-typewriter="jobs-sub">
+          <span class="type-text"></span><span class="caret" aria-hidden="true"></span>
+        </p>
+        <ul class="benefits" aria-label="Kaaryabi benefits">
+          <li>Dual-sided hiring for seekers &amp; companies</li>
+          <li>Fresh roles and verified company profiles</li>
+          <li>Track applications in one place</li>
+        </ul>
+        <span class="cta">
+          Enter Kaaryabi
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11M11 5l5 5-5 5" /></svg>
+        </span>
+      </div>
+    </a>
+
+    <!-- Marketplace — lower-right wedge -->
+    <a
+      class="wedge market"
+      id="wedge-market"
+      href="https://marketplace.devminds.com"
+      data-side="market"
+      aria-label="Enter Marketplace — buy, sell, and rent"
+    >
+      <div class="wedge-atmosphere" aria-hidden="true"></div>
+      <div class="wedge-inner">
+        <p class="product-label">
+          <span class="label-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M4 11 12 4l8 7M7 10v9h10v-9M14 5h4v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          Marketplace
+        </p>
+        <h1 class="type-title" data-typewriter="market-title" aria-live="polite">
+          <span class="type-text"></span><span class="caret" aria-hidden="true"></span>
+        </h1>
+        <p class="type-subtitle" data-typewriter="market-sub">
+          <span class="type-text"></span><span class="caret" aria-hidden="true"></span>
+        </p>
+        <ul class="benefits" aria-label="Marketplace benefits">
+          <li>Buy, sell, or rent in one trusted place</li>
+          <li>Connect with sellers faster</li>
+          <li>Circular access — use what you need</li>
+        </ul>
+        <span class="cta">
+          Enter Marketplace
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11M11 5l5 5-5 5" /></svg>
+        </span>
+      </div>
+    </a>
+
+    <!-- Diagonal seam + DevMinds brand hinge -->
+    <div class="seam" aria-hidden="true">
+      <svg class="seam-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="seamGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#f0a35a" />
+            <stop offset="50%" stop-color="#e8e4dc" />
+            <stop offset="100%" stop-color="#2dd4bf" />
+          </linearGradient>
+          <linearGradient id="seamGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#f0a35a" stop-opacity="0" />
+            <stop offset="40%" stop-color="#f0a35a" stop-opacity=".9" />
+            <stop offset="60%" stop-color="#2dd4bf" stop-opacity=".9" />
+            <stop offset="100%" stop-color="#2dd4bf" stop-opacity="0" />
+          </linearGradient>
+        </defs>
+        <!-- Diagonal from top-right (100,0) to bottom-left (0,100) -->
+        <line class="seam-base" x1="100" y1="0" x2="0" y2="100" />
+        <line class="seam-dash" x1="100" y1="0" x2="0" y2="100" />
+        <line class="seam-travel" x1="100" y1="0" x2="0" y2="100" />
+      </svg>
+      <div class="brand-hinge">
+        <img src="/assets/devminds-mark.png" width="96" height="96" alt="" />
+        <span class="brand-name">DevMinds</span>
+      </div>
+    </div>
+
+    <p class="choose-prompt" id="choose-prompt">Choose a portal</p>
   </div>
 
-  <header class="site-header">
-    <a class="brand" href="/" aria-label="DevMinds home">
-      <img src="/logo.png" width="791" height="369" alt="DevMinds" />
-    </a>
-    <span class="header-note"><i></i> One ecosystem. Real opportunity.</span>
-  </header>
+  <div class="cursor-hint" id="cursor-hint" hidden aria-hidden="true"></div>
 
-  <main>
-    <section class="hero" aria-labelledby="hero-title">
-      <div class="hero-copy">
-        <p class="eyebrow"><span>Built for progress</span></p>
-        <h1 id="hero-title">Your next move<br /><em>starts here.</em></h1>
-        <p class="intro">Discover serious career opportunities or find the right place, product, or buyer—all through one trusted DevMinds ecosystem.</p>
-      </div>
-
-      <nav class="destinations" aria-label="Choose a DevMinds service">
-        <a class="destination jobs" href="https://jobs.devminds.net">
-          <span class="card-topline"><span class="card-index">01</span><span class="status">Explore careers</span></span>
-          <span class="icon-shell" aria-hidden="true">
-            <svg viewBox="0 0 48 48" fill="none">
-              <path d="M17 14v-2.5A4.5 4.5 0 0 1 21.5 7h5a4.5 4.5 0 0 1 4.5 4.5V14" />
-              <rect x="7" y="14" width="34" height="27" rx="6" />
-              <path d="M7 25c10.8 5.3 23.2 5.3 34 0M20 27h8" />
-            </svg>
-          </span>
-          <span class="card-copy">
-            <strong>Searching for Jobs</strong>
-            <small>Find roles, companies, and opportunities built around your ambition.</small>
-          </span>
-          <span class="card-action">Enter Jobs <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11M11 5l5 5-5 5" /></svg></span>
-        </a>
-
-        <a class="destination market" href="https://marketplace.devminds.com">
-          <span class="card-topline"><span class="card-index">02</span><span class="status">Explore marketplace</span></span>
-          <span class="icon-shell" aria-hidden="true">
-            <svg viewBox="0 0 48 48" fill="none">
-              <path d="M8 22 24 8l16 14" />
-              <path d="M12 19v22h24V19M20 41V29h8v12" />
-              <path d="M34 10h6v10" />
-            </svg>
-          </span>
-          <span class="card-copy">
-            <strong>Rent or Sale</strong>
-            <small>Discover trusted listings and make your next transaction with confidence.</small>
-          </span>
-          <span class="card-action">Enter Marketplace <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11M11 5l5 5-5 5" /></svg></span>
-        </a>
-      </nav>
-    </section>
-  </main>
-
-  <footer>
-    <span>DevMinds</span>
-    <span class="footer-rule"></span>
-    <span>Technology for meaningful momentum.</span>
-  </footer>
+  <script src="/app.js" defer></script>
 </body>
 </html>

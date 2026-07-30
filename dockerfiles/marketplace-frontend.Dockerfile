@@ -43,9 +43,9 @@ COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/next.config.js ./next.config.js
 COPY --from=builder /app/next.config.mjs ./next.config.mjs
-COPY --from=builder /app/i18n ./i18n
 # Theme settings persist in .data/ui-context.json at runtime (created on first boot).
 # theme-data/ was removed when HSL file themes were collapsed into ui-context.
+# Locales live in src/lib/i18n.ts and ship inside the Next build - no i18n/ folder.
 RUN mkdir -p .data
 
 EXPOSE 3000
