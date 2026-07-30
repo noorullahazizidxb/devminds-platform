@@ -4,6 +4,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
+PROJECT_NAME="devminds-platform"
+
 BRANCH="$(git branch --show-current)"
 echo "==> Pulling latest for branch '${BRANCH}'..."
 git pull --ff-only origin "${BRANCH}"
@@ -30,23 +32,39 @@ fi
 echo "==> Using $SOURCE → .env ($ENV_MODE)"
 # Strip Windows CRLF so Compose never sees values like "devminds-platform\r"
 sed $'s/\r$//' "$SOURCE" > .env
+sed $'s/\r$//' "$SOURCE" > "${SOURCE}.lf" && mv "${SOURCE}.lf" "$SOURCE"
 
-COMPOSE=(docker compose -f docker-compose.yml)
+# Always pin project name — never trust COMPOSE_PROJECT_NAME from a CRLF-tainted .env
+COMPOSE=(docker compose --project-name "$PROJECT_NAME" --env-file .env -f docker-compose.yml)
 if [ "$ENV_MODE" = "local" ]; then
   COMPOSE+=(-f docker-compose.local.yml)
 fi
 
 echo "WARNING: This deployment permanently deletes the Marketplace and Jobs MySQL databases." >&2
-echo "==> Stopping the DevMinds stack..."
-"${COMPOSE[@]}" down --remove-orphans
+
+echo "==> Stopping DevMinds containers (by name, so a bad project name cannot leave MySQL running)..."
+mapfile -t DEV_CONTAINERS < <(docker ps -aq --filter "name=^/devminds-" || true)
+if ((${#DEV_CONTAINERS[@]})); then
+  docker stop "${DEV_CONTAINERS[@]}" >/dev/null
+  docker rm -f "${DEV_CONTAINERS[@]}" >/dev/null
+fi
+
+echo "==> Stopping the DevMinds Compose project..."
+"${COMPOSE[@]}" down --remove-orphans || true
+# Also tear down a stale CRLF project name if it still exists
+docker compose --project-name $'devminds-platform\r' down --remove-orphans >/dev/null 2>&1 || true
 
 echo "==> Removing only the DevMinds MySQL volume..."
-mapfile -t mysql_volumes < <(docker volume ls --quiet \
-  --filter "label=com.docker.compose.project=devminds-platform" \
-  --filter "label=com.docker.compose.volume=mysql-data")
-if ((${#mysql_volumes[@]})); then
-  docker volume rm "${mysql_volumes[@]}"
-fi
+mapfile -t mysql_volumes < <({
+  docker volume ls --quiet \
+    --filter "label=com.docker.compose.project=${PROJECT_NAME}" \
+    --filter "label=com.docker.compose.volume=mysql-data" || true
+  docker volume ls --quiet | grep -E 'devminds.*mysql-data|mysql-data' | grep -i devminds || true
+} | awk 'NF && !seen[$0]++')
+for vol in "${mysql_volumes[@]:-}"; do
+  echo "    removing volume: $vol"
+  docker volume rm "$vol"
+done
 
 echo "==> Rebuilding all application images without cache..."
 "${COMPOSE[@]}" build --no-cache

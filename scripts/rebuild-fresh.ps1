@@ -57,3 +57,21 @@ Write-Host "==> Starting the stack and recreating both databases..."
 docker compose @composeArgs up -d --remove-orphans
 
 Write-Host "==> Fresh deployment started. Follow readiness with: docker compose $($composeArgs -join ' ') ps"
+$mysqlVolumes = @(docker volume ls --quiet `
+    --filter "label=com.docker.compose.project=$ProjectName" `
+    --filter "label=com.docker.compose.volume=mysql-data")
+$extra = @(docker volume ls --quiet | Select-String -Pattern "devminds.*mysql-data|mysql-data.*devminds" | ForEach-Object { $_.Line })
+foreach ($volume in ($mysqlVolumes + $extra | Select-Object -Unique)) {
+  if ($volume) {
+    Write-Host "    removing volume: $volume"
+    docker volume rm $volume
+  }
+}
+
+Write-Host "==> Rebuilding all application images without cache..."
+docker compose @composeArgs build --no-cache
+
+Write-Host "==> Starting the stack and recreating both databases..."
+docker compose @composeArgs up -d --remove-orphans
+
+Write-Host "==> Fresh deployment started. Follow readiness with: docker compose $($composeArgs -join ' ') ps"

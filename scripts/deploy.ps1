@@ -85,3 +85,5 @@ else {
   Write-Host "  cd gateway; docker compose up -d"
   Write-Host "See docs/GATEWAY.md for NewLinkAF port mapping (9080/9443) and routing details."
 }
+  Write-Host "See docs/GATEWAY.md for NewLinkAF port mapping (9080/9443) and routing details."
+}

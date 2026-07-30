@@ -39,4 +39,23 @@ if ($Prune) {
   }
 }
 
+Write-Host "==> Clean complete."s = @("compose", "--project-name", $ProjectName, "--env-file", ".env", "down", "--remove-orphans") }
+if ($Volumes) { $downArgs += "-v" }
+if ($Images) { $downArgs += "--rmi"; $downArgs += "local" }
+& docker @downArgs
+
+$devContainers = @(docker ps -aq --filter "name=^/devminds-")
+if ($devContainers.Count -gt 0) {
+  docker stop @devContainers | Out-Null
+  docker rm -f @devContainers | Out-Null
+}
+
+if ($Prune) {
+  Write-Host "==> Pruning unused Docker data..."
+  docker system prune -f
+  if ($Volumes) {
+    docker volume prune -f
+  }
+}
+
 Write-Host "==> Clean complete."

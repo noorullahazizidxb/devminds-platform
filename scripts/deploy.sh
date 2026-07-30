@@ -4,6 +4,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
+PROJECT_NAME="devminds-platform"
+
 BRANCH="$(git branch --show-current)"
 echo "==> Pulling latest for branch '${BRANCH}'..."
 git pull --ff-only origin "${BRANCH}"
@@ -30,8 +32,11 @@ fi
 echo "==> Using $SOURCE → .env ($ENV_MODE)"
 # Strip Windows CRLF so Compose never sees values like "devminds-platform\r"
 sed $'s/\r$//' "$SOURCE" > .env
+# Keep the template LF-clean too
+sed $'s/\r$//' "$SOURCE" > "${SOURCE}.lf" && mv "${SOURCE}.lf" "$SOURCE"
 
-COMPOSE=(docker compose -f docker-compose.yml)
+# Always pin project name — never trust COMPOSE_PROJECT_NAME from a CRLF-tainted .env
+COMPOSE=(docker compose --project-name "$PROJECT_NAME" --env-file .env -f docker-compose.yml)
 if [ "$ENV_MODE" = "local" ]; then
   COMPOSE+=(-f docker-compose.local.yml)
   echo "==> Local mode: apps on IP:ports (no Nginx)"
@@ -44,8 +49,8 @@ fi
 
 if [ "$ENV_MODE" = "local" ]; then
   # Stop leftover Nginx from a previous production run (profile-gated locally).
-  docker compose -f docker-compose.yml stop nginx >/dev/null 2>&1 || true
-  docker compose -f docker-compose.yml rm -f nginx >/dev/null 2>&1 || true
+  docker compose --project-name "$PROJECT_NAME" -f docker-compose.yml stop nginx >/dev/null 2>&1 || true
+  docker compose --project-name "$PROJECT_NAME" -f docker-compose.yml rm -f nginx >/dev/null 2>&1 || true
 fi
 
 "${COMPOSE[@]}" ps

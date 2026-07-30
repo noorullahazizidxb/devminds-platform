@@ -4,6 +4,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
+PROJECT_NAME="devminds-platform"
+
 BRANCH="$(git branch --show-current)"
 echo "==> Pulling latest for branch '${BRANCH}'..."
 git pull --ff-only origin "${BRANCH}"
@@ -26,11 +28,27 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
+# Prefer a clean .env if present; still pin project name explicitly
+ENV_ARGS=()
+if [[ -f .env ]]; then
+  sed $'s/\r$//' .env > .env.lf && mv .env.lf .env
+  ENV_ARGS=(--env-file .env)
+fi
+
+COMPOSE=(docker compose --project-name "$PROJECT_NAME" "${ENV_ARGS[@]}" -f docker-compose.yml)
+
 echo "==> Stopping compose stack..."
-ARGS=(compose down --remove-orphans)
+ARGS=(down --remove-orphans)
 if [[ "$VOLUMES" -eq 1 ]]; then ARGS+=(-v); fi
 if [[ "$IMAGES" -eq 1 ]]; then ARGS+=(--rmi local); fi
-docker "${ARGS[@]}"
+"${COMPOSE[@]}" "${ARGS[@]}" || true
+
+# Force-stop any leftover DevMinds containers (wrong project name / orphaned)
+mapfile -t DEV_CONTAINERS < <(docker ps -aq --filter "name=^/devminds-" || true)
+if ((${#DEV_CONTAINERS[@]})); then
+  docker stop "${DEV_CONTAINERS[@]}" >/dev/null || true
+  docker rm -f "${DEV_CONTAINERS[@]}" >/dev/null || true
+fi
 
 if [[ "$PRUNE" -eq 1 ]]; then
   echo "==> Pruning unused Docker data..."
