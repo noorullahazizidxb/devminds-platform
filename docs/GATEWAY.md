@@ -62,11 +62,14 @@ DevMinds Nginx already publishes `127.0.0.1:8080:80` and `127.0.0.1:8443:443`.
 
 ## 3. Start the external gateway
 
+**Important:** if you previously `export COMPOSE_PROJECT_NAME=devminds-platform`, unset it first. That env var overrides `name: edge-gateway` and makes Compose treat DevMinds app containers as “orphans” of the gateway project.
+
 ```bash
 cd /path/to/devminds-platform/gateway
-cp -n .env.example .env   # optional; defaults are fine for the port map above
-docker compose up -d
-docker compose ps
+cp -n .env.example .env
+unset COMPOSE_PROJECT_NAME
+docker compose --project-name edge-gateway up -d
+docker compose --project-name edge-gateway ps
 curl -s -H 'Host: devminds.net' http://127.0.0.1/gateway-health
 # → gateway-ok
 ```
@@ -74,8 +77,11 @@ curl -s -H 'Host: devminds.net' http://127.0.0.1/gateway-health
 From repo root:
 
 ```bash
-docker compose -f gateway/docker-compose.yml --project-directory gateway up -d
+unset COMPOSE_PROJECT_NAME
+docker compose -f gateway/docker-compose.yml --project-directory gateway --project-name edge-gateway up -d
 ```
+
+If `edge-gateway-nginx` is `Restarting`, check logs (`docker logs edge-gateway-nginx`). A common cause was an empty `stream-conf.d` (SNI templates not rendered); the image entrypoint hook `docker-entrypoint.d/30-envsubst-stream-templates.sh` generates those files at start.
 
 ## 4. Verify routing
 
@@ -114,10 +120,11 @@ HTTP-01 ACME on port 80 still works: the gateway proxies `Host`-matched traffic 
 
 ```bash
 cd gateway
-docker compose logs -f gateway-nginx
-docker compose exec gateway-nginx nginx -t
-docker compose exec gateway-nginx nginx -s reload
-docker compose down    # stops gateway only; apps keep running on localhost ports
+unset COMPOSE_PROJECT_NAME
+docker compose --project-name edge-gateway logs -f gateway-nginx
+docker compose --project-name edge-gateway exec gateway-nginx nginx -t
+docker compose --project-name edge-gateway exec gateway-nginx nginx -s reload
+docker compose --project-name edge-gateway down    # stops gateway only; apps keep running on localhost ports
 ```
 
 Bring-up order on a fresh VPS:
