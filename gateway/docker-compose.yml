@@ -3,15 +3,13 @@
 #
 # Start (from this directory):
 #   unset COMPOSE_PROJECT_NAME
+#   docker network create public-proxy 2>/dev/null || true
 #   docker compose --project-name edge-gateway up -d
 #
-# Or from repo root:
-#   docker compose -f gateway/docker-compose.yml --project-directory gateway --project-name edge-gateway up -d
-#
 # Prerequisites:
-#   1. DevMinds platform nginx binds localhost-only 8080/8443 (see root docker-compose.yml)
-#   2. /opt/newlinkaf.com nginx binds localhost-only 9080/9443 (see docs/GATEWAY.md)
-#   3. Do NOT export COMPOSE_PROJECT_NAME=devminds-platform in this shell — it overrides name: edge-gateway
+#   1. DevMinds nginx joins public-proxy as alias devminds-internal-nginx
+#   2. NewLinkAF nginx joins public-proxy as alias newlinkaf-nginx (and publishes 9080/9443 for host debug)
+#   3. Do NOT export COMPOSE_PROJECT_NAME=devminds-platform in this shell
 
 name: edge-gateway
 
@@ -26,20 +24,18 @@ services:
     environment:
       # Only substitute our upstream vars; leave nginx $host / $scheme etc. intact.
       NGINX_ENVSUBST_FILTER: "^(DEVMINDS_|NEWLINKAF_)"
-      DEVMINDS_HTTP_UPSTREAM: ${DEVMINDS_HTTP_UPSTREAM:-host.docker.internal:8080}
-      DEVMINDS_HTTPS_UPSTREAM: ${DEVMINDS_HTTPS_UPSTREAM:-host.docker.internal:8443}
-      NEWLINKAF_HTTP_UPSTREAM: ${NEWLINKAF_HTTP_UPSTREAM:-host.docker.internal:9080}
-      NEWLINKAF_HTTPS_UPSTREAM: ${NEWLINKAF_HTTPS_UPSTREAM:-host.docker.internal:9443}
+      # Docker DNS names on the shared public-proxy network (NOT host.docker.internal —
+      # Linux cannot reach 127.0.0.1-bound ports via the host-gateway IP).
+      DEVMINDS_HTTP_UPSTREAM: ${DEVMINDS_HTTP_UPSTREAM:-devminds-internal-nginx:80}
+      DEVMINDS_HTTPS_UPSTREAM: ${DEVMINDS_HTTPS_UPSTREAM:-devminds-internal-nginx:443}
+      NEWLINKAF_HTTP_UPSTREAM: ${NEWLINKAF_HTTP_UPSTREAM:-newlinkaf-nginx:80}
+      NEWLINKAF_HTTPS_UPSTREAM: ${NEWLINKAF_HTTPS_UPSTREAM:-newlinkaf-nginx:443}
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/templates:/etc/nginx/templates:ro
-      # Writable output dirs for envsubst (also hides image default.conf).
-      # Official entrypoint renders *.template → conf.d and *.stream-template → stream-conf.d
-      # when nginx.conf contains a stream {} block.
       - gateway-http-conf:/etc/nginx/conf.d
       - gateway-stream-conf:/etc/nginx/stream-conf.d
     extra_hosts:
-      # Reach host-published localhost ports from inside the container (Linux Docker).
       - "host.docker.internal:host-gateway"
     healthcheck:
       test:
@@ -53,11 +49,15 @@ services:
       start_period: 10s
     networks:
       - edge-gateway-net
+      - public-proxy
 
 networks:
   edge-gateway-net:
     name: edge-gateway
     driver: bridge
+  public-proxy:
+    external: true
+    name: public-proxy
 
 volumes:
   gateway-http-conf:

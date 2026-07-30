@@ -1,4 +1,7 @@
 # --- NewLinkAF (ticket.newlinkaf.com) ---
+# Upstream is the NewLinkAF nginx container on the shared public-proxy network
+# (alias newlinkaf-nginx). Do NOT use host.docker.internal:9080 — Linux Docker
+# cannot reach processes bound only to 127.0.0.1 via the host-gateway IP.
 server {
     listen 80;
     listen [::]:80;
@@ -13,11 +16,15 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection $connection_upgrade;
+        proxy_connect_timeout 5s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
         proxy_buffering off;
     }
 }
 
 # --- DevMinds platform ---
+# Upstream is devminds-nginx on public-proxy (alias devminds-internal-nginx).
 server {
     listen 80;
     listen [::]:80;
@@ -37,6 +44,9 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection $connection_upgrade;
+        proxy_connect_timeout 5s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
         proxy_buffering off;
     }
 }

@@ -1,6 +1,6 @@
 # External Nginx Edge Gateway
 
-On the VPS, **DevMinds** and **NewLinkAF** (`/opt/newlinkaf.com`) each have their own Nginx. Both previously wanted host ports **80** and **443**. This gateway owns those public ports and routes by hostname to the two internal Nginx instances.
+On the VPS, **DevMinds** and **NewLinkAF** (`/opt/newlinkaf.com`) each have their own Nginx. Both previously wanted host ports **80** and **443**. This gateway owns those public ports and routes by hostname to the two internal Nginx instances **over the shared Docker network `public-proxy`**.
 
 ```text
 Internet
@@ -9,11 +9,13 @@ Internet
 edge-gateway-nginx  (:80 / :443)     ← gateway/docker-compose.yml
    │
    ├── Host: ticket.newlinkaf.com
-   │         → 127.0.0.1:9080 (HTTP) / :9443 (HTTPS)   NewLinkAF Nginx
+   │         → newlinkaf-nginx:80 (HTTP) / :443 (HTTPS SNI)
    │
    └── Host: *.devminds.net / marketplace.devminds.com
-             → 127.0.0.1:8080 (HTTP) / :8443 (HTTPS)   DevMinds Nginx
+             → devminds-internal-nginx:80 (HTTP) / :443 (HTTPS SNI)
 ```
+
+**Why not `host.docker.internal:8080`?** On Linux Docker, `host.docker.internal` resolves to the bridge gateway IP. Services bound only to `127.0.0.1:8080` are **not** reachable on that IP — proxies hang and return **504**. Use Docker DNS aliases on `public-proxy` instead.
 
 - **HTTP (80):** reverse-proxy by `Host` header (ACME + redirects stay on each app).
 - **HTTPS (443):** SNI passthrough — each app keeps its own TLS certificates.
@@ -23,54 +25,73 @@ edge-gateway-nginx  (:80 / :443)     ← gateway/docker-compose.yml
 | Listener | Who binds it | Notes |
 |----------|--------------|-------|
 | `0.0.0.0:80` / `:443` | `edge-gateway-nginx` | Public edge |
-| `127.0.0.1:8080` / `:8443` | `devminds-nginx` | Internal only (root `docker-compose.yml`) |
-| `127.0.0.1:9080` / `:9443` | NewLinkAF nginx | You must set this in `/opt/newlinkaf.com` |
+| `127.0.0.1:8080` / `:8443` | `devminds-nginx` | Host debug only; edge uses Docker DNS |
+| `127.0.0.1:9080` / `:9443` | `newlinkaf-nginx` | Host debug only; edge uses Docker DNS |
 
-## 1. Point NewLinkAF Nginx at localhost ports
+Shared network: `public-proxy` (create once: `docker network create public-proxy`).
 
-In `/opt/newlinkaf.com` docker-compose (or equivalent), change the Nginx service from publishing public 80/443 to localhost-only:
+Aliases:
+
+- DevMinds → `devminds-internal-nginx`
+- NewLinkAF → `newlinkaf-nginx`
+
+## 1. Point NewLinkAF Nginx at localhost debug ports + public-proxy
+
+In `/opt/newlinkaf.com` docker-compose nginx service:
 
 ```yaml
 services:
-  nginx:  # use the actual service name in that project
+  nginx:
+    container_name: newlinkaf-nginx
     ports:
       - "127.0.0.1:9080:80"
       - "127.0.0.1:9443:443"
+    volumes:
+      - ${NGINX_CONF:-./docker/nginx.conf}:/etc/nginx/conf.d/default.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - ./certbot-webroot:/var/www/certbot:ro
+    networks:
+      internal:
+      public-proxy:
+        aliases:
+          - newlinkaf-nginx
 ```
 
 Then recreate that stack:
 
 ```bash
+docker network create public-proxy 2>/dev/null || true
 cd /opt/newlinkaf.com
 docker compose up -d
 ```
 
-Confirm nothing else still binds public 80/443:
+Confirm nothing else still binds public 80/443 except the edge gateway:
 
 ```bash
-sudo ss -tlnp | grep -E ':80|:443'
+sudo ss -tlnp | grep -E ':80 |:443 '
 ```
 
-## 2. Start DevMinds (internal Nginx on 8080/8443)
+## 2. Start DevMinds (internal Nginx on 8080/8443 + public-proxy)
 
 ```bash
 cd /path/to/devminds-platform
 ./scripts/deploy.sh production
 ```
 
-DevMinds Nginx already publishes `127.0.0.1:8080:80` and `127.0.0.1:8443:443`.
+DevMinds Nginx publishes `127.0.0.1:8080:80` / `8443:443` and joins `public-proxy` as `devminds-internal-nginx`.
 
 ## 3. Start the external gateway
 
-**Important:** if you previously `export COMPOSE_PROJECT_NAME=devminds-platform`, unset it first. That env var overrides `name: edge-gateway` and makes Compose treat DevMinds app containers as “orphans” of the gateway project.
+**Important:** if you previously `export COMPOSE_PROJECT_NAME=devminds-platform`, unset it first. That env var overrides `name: edge-gateway`.
 
 ```bash
 cd /path/to/devminds-platform/gateway
 cp -n .env.example .env
 unset COMPOSE_PROJECT_NAME
+docker network create public-proxy 2>/dev/null || true
 docker compose --project-name edge-gateway up -d
 docker compose --project-name edge-gateway ps
-curl -s -H 'Host: devminds.net' http://127.0.0.1/gateway-health
+curl -s http://127.0.0.1/gateway-health
 # → gateway-ok
 ```
 
@@ -88,16 +109,20 @@ Common causes:
 - **`load_module ... ngx_stream_module.so` failed** — official `nginx:*-alpine` builds stream into the binary; do not `load_module` those `.so` files (see `gateway/nginx/nginx.conf`).
 - **Stale container name** — remove the old container: `docker rm -f edge-gateway-nginx`
 - **Wrong Compose project** — `unset COMPOSE_PROJECT_NAME` and always use `--project-name edge-gateway`
+- **504 Gateway Time-out** — edge cannot reach upstream; confirm both app nginx containers are on `public-proxy` (`docker network inspect public-proxy`)
 
 ## 4. Verify routing
 
 ```bash
-# DevMinds
+# DevMinds (via edge)
 curl -sI -H 'Host: jobs.devminds.net' http://127.0.0.1/
 curl -skI https://jobs.devminds.net/health
 
+# Direct to DevMinds nginx (bypass edge)
+curl -sI -H 'Host: jobs.devminds.net' http://127.0.0.1:8080/
+
 # NewLinkAF
-curl -sI -H 'Host: ticket.newlinkaf.com' http://127.0.0.1/
+curl -sI -H 'Host: ticket.newlinkaf.com' http://127.0.0.1:9080/
 curl -skI https://ticket.newlinkaf.com/
 ```
 
@@ -106,19 +131,29 @@ curl -skI https://ticket.newlinkaf.com/
 Edit `gateway/.env` (see `.env.example`):
 
 ```env
-DEVMINDS_HTTP_UPSTREAM=host.docker.internal:8080
-DEVMINDS_HTTPS_UPSTREAM=host.docker.internal:8443
-NEWLINKAF_HTTP_UPSTREAM=host.docker.internal:9080
-NEWLINKAF_HTTPS_UPSTREAM=host.docker.internal:9443
+DEVMINDS_HTTP_UPSTREAM=devminds-internal-nginx:80
+DEVMINDS_HTTPS_UPSTREAM=devminds-internal-nginx:443
+NEWLINKAF_HTTP_UPSTREAM=newlinkaf-nginx:80
+NEWLINKAF_HTTPS_UPSTREAM=newlinkaf-nginx:443
 ```
 
-Then `docker compose up -d` again in `gateway/`.
-
-`host.docker.internal` is mapped to the Docker host via `extra_hosts: host.docker.internal:host-gateway`.
+Then `docker compose --project-name edge-gateway up -d` again in `gateway/`.
 
 ## TLS / Let’s Encrypt
 
-Issue and renew certs **on each app** as before (webroot or standalone against each internal Nginx). The gateway does not terminate TLS for app domains; it forwards 443 by SNI.
+Issue and renew certs **on each app** (webroot through the edge → app nginx ACME locations). The gateway does not terminate TLS for app domains; it forwards 443 by SNI.
+
+DevMinds helper:
+
+```bash
+cd /opt/devminds/devminds-platform
+chmod +x scripts/issue-ssl-devminds.sh
+./scripts/issue-ssl-devminds.sh
+```
+
+That writes LE material into `nginx/certs/{fullchain,privkey}.pem` and reloads `devminds-nginx`.
+
+NewLinkAF keeps `/etc/letsencrypt/live/ticket.newlinkaf.com/` (see `/opt/newlinkaf.com` scripts).
 
 HTTP-01 ACME on port 80 still works: the gateway proxies `Host`-matched traffic to the correct internal Nginx, which serves `/.well-known/acme-challenge/`.
 
@@ -135,6 +170,7 @@ docker compose --project-name edge-gateway down    # stops gateway only; apps ke
 
 Bring-up order on a fresh VPS:
 
-1. NewLinkAF on `9080`/`9443`
-2. DevMinds on `8080`/`8443`
-3. Gateway on `80`/`443`
+1. `docker network create public-proxy`
+2. NewLinkAF (9080/9443 + public-proxy)
+3. DevMinds (8080/8443 + public-proxy)
+4. Gateway on `80`/`443`
