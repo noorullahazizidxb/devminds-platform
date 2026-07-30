@@ -81,7 +81,13 @@ unset COMPOSE_PROJECT_NAME
 docker compose -f gateway/docker-compose.yml --project-directory gateway --project-name edge-gateway up -d
 ```
 
-If `edge-gateway-nginx` is `Restarting`, check logs (`docker logs edge-gateway-nginx`). A common cause was an empty `stream-conf.d` (SNI templates not rendered); the image entrypoint hook `docker-entrypoint.d/30-envsubst-stream-templates.sh` generates those files at start.
+If `edge-gateway-nginx` is `Restarting`, check logs (`docker logs edge-gateway-nginx`).
+
+Common causes:
+
+- **`load_module ... ngx_stream_module.so` failed** — official `nginx:*-alpine` builds stream into the binary; do not `load_module` those `.so` files (see `gateway/nginx/nginx.conf`).
+- **Stale container name** — remove the old container: `docker rm -f edge-gateway-nginx`
+- **Wrong Compose project** — `unset COMPOSE_PROJECT_NAME` and always use `--project-name edge-gateway`
 
 ## 4. Verify routing
 

@@ -33,9 +33,9 @@ services:
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/templates:/etc/nginx/templates:ro
-      # Official image only processes *.template → conf.d; this hook does *.stream-template → stream-conf.d
-      - ./docker-entrypoint.d/30-envsubst-stream-templates.sh:/docker-entrypoint.d/30-envsubst-stream-templates.sh:ro
       # Writable output dirs for envsubst (also hides image default.conf).
+      # Official entrypoint renders *.template → conf.d and *.stream-template → stream-conf.d
+      # when nginx.conf contains a stream {} block.
       - gateway-http-conf:/etc/nginx/conf.d
       - gateway-stream-conf:/etc/nginx/stream-conf.d
     extra_hosts:
