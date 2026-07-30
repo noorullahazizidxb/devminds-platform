@@ -3,7 +3,7 @@
 
 # Gateway local overrides (tracked template: gateway/.env.example)
 gateway/.env
-
+.specstory
 # Local overrides / junk
 *.log
 .DS_Store
