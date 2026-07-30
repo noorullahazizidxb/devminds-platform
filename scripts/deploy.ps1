@@ -78,3 +78,10 @@ else {
   Write-Host "  cd gateway; docker compose up -d"
   Write-Host "See docs/GATEWAY.md for NewLinkAF port mapping (9080/9443) and routing details."
 }
+else {
+  Write-Host ""
+  Write-Host "Production: DevMinds Nginx is on 127.0.0.1:8080 (HTTP) and 127.0.0.1:8443 (HTTPS)."
+  Write-Host "If this VPS also hosts NewLinkAF (ticket.newlinkaf.com), start the edge gateway:"
+  Write-Host "  cd gateway; docker compose up -d"
+  Write-Host "See docs/GATEWAY.md for NewLinkAF port mapping (9080/9443) and routing details."
+}

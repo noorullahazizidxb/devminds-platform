@@ -18,6 +18,13 @@ $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
 Set-Location $Root
 
+$branch = (git branch --show-current).Trim()
+Write-Host "==> Pulling latest for branch '$branch'..."
+git pull --ff-only origin $branch
+if ($LASTEXITCODE -ne 0) {
+  throw "git pull failed for branch '$branch'."
+}
+
 Write-Host "==> Stopping compose stack..."
 $downArgs = @("compose", "down", "--remove-orphans")
 if ($Volumes) { $downArgs += "-v" }

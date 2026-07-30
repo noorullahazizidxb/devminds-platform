@@ -4,6 +4,10 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
+BRANCH="$(git branch --show-current)"
+echo "==> Pulling latest for branch '${BRANCH}'..."
+git pull --ff-only origin "${BRANCH}"
+
 VOLUMES=0
 IMAGES=0
 PRUNE=0

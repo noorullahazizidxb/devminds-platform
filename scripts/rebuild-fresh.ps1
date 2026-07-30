@@ -50,3 +50,10 @@ Write-Host "==> Starting the stack and recreating both databases..."
 docker compose @composeArgs up -d --remove-orphans
 
 Write-Host "==> Fresh deployment started. Follow readiness with: docker compose $($composeArgs -join ' ') ps"
+Write-Host "==> Rebuilding all application images without cache..."
+docker compose @composeArgs build --no-cache
+
+Write-Host "==> Starting the stack and recreating both databases..."
+docker compose @composeArgs up -d --remove-orphans
+
+Write-Host "==> Fresh deployment started. Follow readiness with: docker compose $($composeArgs -join ' ') ps"
