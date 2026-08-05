@@ -26,7 +26,8 @@ server {
         www.devminds.net
         jobs.devminds.net
         marketplace.devminds.net
-        marketplace.devminds.com;
+        marketplace.devminds.com
+        noorullah-azizi-ceo.devminds.net;
 
     location / {
         proxy_pass http://${DEVMINDS_HTTP_UPSTREAM};

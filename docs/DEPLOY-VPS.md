@@ -1,6 +1,6 @@
 # Deploy DevMinds Platform on Ubuntu VPS
 
-Target: Ubuntu 22.04/24.04, Docker Compose, production domains (`devminds.net`, `jobs.devminds.net`, `marketplace.devminds.net` / `.com`), Let’s Encrypt TLS into `nginx/certs/`.
+Target: Ubuntu 22.04/24.04, Docker Compose, production domains (`devminds.net`, `jobs.devminds.net`, `marketplace.devminds.net` / `.com`, `noorullah-azizi-ceo.devminds.net`), Let’s Encrypt TLS into `nginx/certs/`.
 
 Local development uses IP:ports instead — see [LOCALHOST.md](LOCALHOST.md). Production deploy uses `.env.production` and **only** `docker-compose.yml` (DevMinds Nginx on localhost `8080`/`8443`; app ports stay internal).
 
@@ -170,6 +170,7 @@ sudo certbot certonly --webroot \
   -d devminds.net -d www.devminds.net \
   -d jobs.devminds.net \
   -d marketplace.devminds.net -d marketplace.devminds.com \
+  -d noorullah-azizi-ceo.devminds.net \
   --email admin@devminds.net --agree-tos --no-eff-email
 ```
 
@@ -183,6 +184,7 @@ sudo certbot certonly --standalone \
   -d devminds.net -d www.devminds.net \
   -d jobs.devminds.net \
   -d marketplace.devminds.net -d marketplace.devminds.com \
+  -d noorullah-azizi-ceo.devminds.net \
   --email admin@devminds.net --agree-tos --no-eff-email
 cd ~/projects/devminds-platform/gateway && docker compose start gateway-nginx
 ```

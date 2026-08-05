@@ -11,6 +11,7 @@ map $ssl_preread_server_name $https_upstream {
     jobs.devminds.net                 ${DEVMINDS_HTTPS_UPSTREAM};
     marketplace.devminds.net          ${DEVMINDS_HTTPS_UPSTREAM};
     marketplace.devminds.com          ${DEVMINDS_HTTPS_UPSTREAM};
+    noorullah-azizi-ceo.devminds.net  ${DEVMINDS_HTTPS_UPSTREAM};
 
     default                           ${DEVMINDS_HTTPS_UPSTREAM};
 }

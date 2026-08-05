@@ -12,11 +12,26 @@ edge-gateway-nginx  (:80 / :443)     ← gateway/docker-compose.yml
    │         → 127.0.0.1:9080 (HTTP) / :9443 (HTTPS)   NewLinkAF Nginx
    │
    └── Host: *.devminds.net / marketplace.devminds.com
+             (incl. noorullah-azizi-ceo.devminds.net)
              → 127.0.0.1:8080 (HTTP) / :8443 (HTTPS)   DevMinds Nginx
 ```
 
+Hostnames are an **explicit list** in `gateway/nginx/templates/` (not a true DNS wildcard). Add new DevMinds hosts to both HTTP `server_name` and the SNI map, then recreate the gateway container so envsubst regenerates config.
+
 - **HTTP (80):** reverse-proxy by `Host` header (ACME + redirects stay on each app).
 - **HTTPS (443):** SNI passthrough — each app keeps its own TLS certificates.
+
+### Portfolio host (`noorullah-azizi-ceo.devminds.net`)
+
+Registered on the edge → DevMinds Nginx. Path routing inside `nginx/conf.d/noorullah-azizi-ceo.conf`:
+
+| Path | Upstream container |
+|------|--------------------|
+| `/` | `noorullah-portfolio-elite:8080` |
+| `/v1/` | `noorullah-portfolio-v1:8080` |
+| `/v2/` | `noorullah-portfolio-v2:8080` |
+
+Deploy containers from the `noorullah-portfolio-deployment` package onto `devminds-net`, then expand the Let’s Encrypt SAN (see `DEPLOY-VPS.md`).
 
 ## Port map
 
