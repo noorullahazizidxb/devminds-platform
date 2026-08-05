@@ -2,7 +2,9 @@
 
 Target: Ubuntu 22.04/24.04, Docker Compose, production domains (`devminds.net`, `jobs.devminds.net`, `marketplace.devminds.net` / `.com`), Let’s Encrypt TLS into `nginx/certs/`.
 
-Local development uses IP:ports instead — see [LOCALHOST.md](LOCALHOST.md). Production deploy uses `.env.production` and **only** `docker-compose.yml` (Nginx on 80/443; app ports stay internal).
+Local development uses IP:ports instead — see [LOCALHOST.md](LOCALHOST.md). Production deploy uses `.env.production` and **only** `docker-compose.yml` (DevMinds Nginx on localhost `8080`/`8443`; app ports stay internal).
+
+If this VPS also runs NewLinkAF (`/opt/newlinkaf.com` → `ticket.newlinkaf.com`), start the **external edge gateway** so public 80/443 are shared — see [GATEWAY.md](GATEWAY.md).
 
 ## Cheat sheet
 
@@ -12,6 +14,8 @@ nano .env.production          # replace every ChangeMe*
 chmod +x scripts/*.sh
 ./scripts/deploy.sh production
 docker compose ps
+# If NewLinkAF shares this VPS, start the edge gateway (owns public 80/443):
+cd gateway && docker compose up -d && cd ..
 curl -k https://jobs.devminds.net/health
 # then issue Let’s Encrypt (Step 6) and turn seed flags down (Step 7)
 ```
@@ -22,7 +26,7 @@ curl -k https://jobs.devminds.net/health
 
 - **RAM:** 4–8 GB minimum (Elasticsearch uses ~512m heap)
 - **Disk:** ≥20 GB free for images + MySQL/ES volumes
-- **Ports:** 22 (SSH), 80, 443 open
+- **Ports:** 22 (SSH), 80, 443 open (public 80/443 via `gateway/` when sharing the VPS with NewLinkAF)
 - **DNS:** A/AAAA for all domains pointing at the VPS **before** issuing certs
 
 ---
@@ -119,12 +123,19 @@ cd ~/projects/devminds-platform
 chmod +x scripts/*.sh
 ./scripts/deploy.sh production
 docker compose ps
+
+# Shared VPS with NewLinkAF: gateway must be up before public HTTPS works.
+# NewLinkAF Nginx must bind 127.0.0.1:9080/9443 first — see GATEWAY.md.
+cd gateway && docker compose up -d && cd ..
+
 curl -k https://devminds.net/health
 curl -k https://jobs.devminds.net/health
 curl -k https://marketplace.devminds.net/health
 ```
 
 Self-signed certs ship under `nginx/certs/`. Proceed once health checks pass.
+
+Without the gateway (DevMinds-only VPS), you can temporarily publish DevMinds Nginx on 80/443 instead of localhost ports — prefer the gateway layout if NewLinkAF coexists.
 
 On start, backends automatically:
 
@@ -151,6 +162,8 @@ sudo apt install -y certbot
 
 cd ~/projects/devminds-platform
 docker compose up -d nginx
+# Keep the edge gateway up so public :80 reaches DevMinds Nginx (ACME webroot).
+cd gateway && docker compose up -d && cd ..
 
 sudo certbot certonly --webroot \
   -w "$(pwd)/nginx/www/certbot" \
@@ -162,16 +175,16 @@ sudo certbot certonly --webroot \
 
 ### Fallback (standalone)
 
-If webroot fails, free port 80 briefly:
+If webroot fails, free port 80 briefly (stop the **gateway**, not only app Nginx):
 
 ```bash
-docker compose stop nginx
+cd ~/projects/devminds-platform/gateway && docker compose stop gateway-nginx
 sudo certbot certonly --standalone \
   -d devminds.net -d www.devminds.net \
   -d jobs.devminds.net \
   -d marketplace.devminds.net -d marketplace.devminds.com \
   --email admin@devminds.net --agree-tos --no-eff-email
-docker compose start nginx
+cd ~/projects/devminds-platform/gateway && docker compose start gateway-nginx
 ```
 
 ### Install certs into Nginx filenames

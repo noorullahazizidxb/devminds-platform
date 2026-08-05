@@ -1,6 +1,9 @@
 # Active Compose env (copied from .env.local or .env.production)
 .env
 
+# Gateway local overrides (tracked template: gateway/.env.example)
+gateway/.env
+.specstory
 # Local overrides / junk
 *.log
 .DS_Store

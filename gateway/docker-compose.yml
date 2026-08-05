@@ -1,0 +1,60 @@
+# External edge gateway — owns host ports 80/443 and routes by hostname
+# to the internal DevMinds nginx and the NewLinkAF nginx on the same VPS.
+#
+# Start (from this directory):
+#   docker compose up -d
+#
+# Or from repo root:
+#   docker compose -f gateway/docker-compose.yml --project-directory gateway up -d
+#
+# Prerequisites:
+#   1. DevMinds platform nginx binds localhost-only 8080/8443 (see root docker-compose.yml)
+#   2. /opt/newlinkaf.com nginx binds localhost-only 9080/9443 (see docs/GATEWAY.md)
+
+name: edge-gateway
+
+services:
+  gateway-nginx:
+    image: nginx:1.27-alpine
+    container_name: edge-gateway-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      # Only substitute our upstream vars; leave nginx $host / $scheme etc. intact.
+      NGINX_ENVSUBST_FILTER: "^(DEVMINDS_|NEWLINKAF_)"
+      DEVMINDS_HTTP_UPSTREAM: ${DEVMINDS_HTTP_UPSTREAM:-host.docker.internal:8080}
+      DEVMINDS_HTTPS_UPSTREAM: ${DEVMINDS_HTTPS_UPSTREAM:-host.docker.internal:8443}
+      NEWLINKAF_HTTP_UPSTREAM: ${NEWLINKAF_HTTP_UPSTREAM:-host.docker.internal:9080}
+      NEWLINKAF_HTTPS_UPSTREAM: ${NEWLINKAF_HTTPS_UPSTREAM:-host.docker.internal:9443}
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/templates:/etc/nginx/templates:ro
+      # Writable output dirs for envsubst (also hides image default.conf).
+      - gateway-http-conf:/etc/nginx/conf.d
+      - gateway-stream-conf:/etc/nginx/stream-conf.d
+    extra_hosts:
+      # Reach host-published localhost ports from inside the container (Linux Docker).
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q --spider http://127.0.0.1/gateway-health || exit 1",
+        ]
+      interval: 20s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - edge-gateway-net
+
+networks:
+  edge-gateway-net:
+    name: edge-gateway
+    driver: bridge
+
+volumes:
+  gateway-http-conf:
+  gateway-stream-conf:
