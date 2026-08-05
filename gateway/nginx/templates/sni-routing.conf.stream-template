@@ -11,6 +11,9 @@ resolver 127.0.0.11 valid=10s ipv6=off;
 map $ssl_preread_server_name $https_upstream {
     ticket.newlinkaf.com              ${NEWLINKAF_HTTPS_UPSTREAM};
 
+    noorullah-azizi-ceo.devminds.net  ${PORTFOLIO_HTTPS_UPSTREAM};
+    apidocs.otatickets.com            ${SWAGGER_HTTPS_UPSTREAM};
+
     devminds.net                      ${DEVMINDS_HTTPS_UPSTREAM};
     www.devminds.net                  ${DEVMINDS_HTTPS_UPSTREAM};
     jobs.devminds.net                 ${DEVMINDS_HTTPS_UPSTREAM};

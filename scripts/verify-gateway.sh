@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Quick VPS verification for edge gateway + both app stacks.
+# Quick VPS verification for edge gateway + app stacks.
 set -euo pipefail
 
 echo "==> public-proxy network"
@@ -31,6 +31,24 @@ curl -sI -H 'Host: ticket.newlinkaf.com' --max-time 10 http://127.0.0.1:9080/ | 
 
 echo "==> NewLinkAF HTTPS"
 curl -skI --max-time 15 https://ticket.newlinkaf.com/ | head -n 8 || true
+
+echo "==> Portfolio direct :9180"
+curl -sI -H 'Host: noorullah-azizi-ceo.devminds.net' --max-time 10 http://127.0.0.1:9180/ | head -n 5 || true
+
+echo "==> Portfolio via edge (HTTP)"
+curl -sI -H 'Host: noorullah-azizi-ceo.devminds.net' --max-time 10 http://127.0.0.1/ | head -n 5 || true
+
+echo "==> Portfolio HTTPS"
+curl -skI --max-time 15 https://noorullah-azizi-ceo.devminds.net/ | head -n 8 || true
+
+echo "==> Swagger direct :9280"
+curl -sI -H 'Host: apidocs.otatickets.com' --max-time 10 http://127.0.0.1:9280/ | head -n 5 || true
+
+echo "==> Swagger via edge (HTTP)"
+curl -sI -H 'Host: apidocs.otatickets.com' --max-time 10 http://127.0.0.1/ | head -n 5 || true
+
+echo "==> Swagger HTTPS"
+curl -skI --max-time 15 https://apidocs.otatickets.com/ | head -n 8 || true
 
 echo "==> Cert issuer (jobs)"
 echo | openssl s_client -connect jobs.devminds.net:443 -servername jobs.devminds.net 2>/dev/null \
